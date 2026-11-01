@@ -8,18 +8,19 @@ export const LIBRARY_KEY = `${NS}.library`
 export const bookKey = (id: string) => `${NS}.book.${id}`
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: 'light',
+  theme: 'paper',
   flow: 'paginated',
   fontSize: 100,
   lineHeight: 1.55,
   justify: true,
   hyphens: true,
   columnWidth: 620,
-  readingFont: 'book',
+  readingFont: 'descanso',
   zoom: 'fit-page',
   marginNotes: true,
   language: 'auto',
   railOpen: true,
+  version: 2,
 }
 
 export const EMPTY_PROGRESS = { cfi: '', fraction: 0, chapter: '' }
@@ -65,7 +66,20 @@ const normalize = (record: BookRecord): BookRecord => ({
 
 export function loadSettings(): Settings {
   const saved = read<Partial<Settings>>(SETTINGS_KEY)
-  return { ...DEFAULT_SETTINGS, ...(saved ?? {}) }
+  const merged: Settings = { ...DEFAULT_SETTINGS, ...(saved ?? {}) }
+  if ((saved?.version ?? 1) < 2) {
+    // names changed when the industrial theme replaced the old dark one, and
+    // the default reading face moved from the book's own to Descanso
+    const theme = merged.theme as string
+    if (theme === 'light') merged.theme = 'paper'
+    if (theme === 'dark') merged.theme = 'industrial'
+    const font = merged.readingFont as string
+    if (font === 'serif') merged.readingFont = 'editorial'
+    if (font === 'sans') merged.readingFont = 'legible'
+    if (font === 'book') merged.readingFont = 'descanso'
+    merged.version = 2
+  }
+  return merged
 }
 
 export function saveSettings(settings: Settings): boolean {

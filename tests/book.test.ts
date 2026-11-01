@@ -35,16 +35,16 @@ describe('fileId', () => {
 
 describe('bookStyles', () => {
   it('paints the reading surface with the active theme', () => {
-    const light = bookStyles(DEFAULT_SETTINGS, 'light')
-    const dark = bookStyles(DEFAULT_SETTINGS, 'dark')
-    expect(light).toContain('#f7f2e6')
-    expect(dark).toContain('#201d18')
+    const light = bookStyles(DEFAULT_SETTINGS, 'paper')
+    const dark = bookStyles(DEFAULT_SETTINGS, 'industrial')
+    expect(light).toContain('#fbf6ea')
+    expect(dark).toContain('#d9d3b4')
     expect(light).toContain('--overlayer-highlight-blend-mode: multiply')
-    expect(dark).toContain('--overlayer-highlight-blend-mode: screen')
+    expect(dark).toContain('--overlayer-highlight-blend-mode: multiply')
   })
 
   it('honours type settings', () => {
-    const css = bookStyles({ ...DEFAULT_SETTINGS, fontSize: 130, justify: false }, 'light')
+    const css = bookStyles({ ...DEFAULT_SETTINGS, fontSize: 130, justify: false }, 'paper')
     expect(css).toContain('font-size: 130%')
     expect(css).toContain('text-align: start')
   })

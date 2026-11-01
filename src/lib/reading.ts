@@ -1,4 +1,4 @@
-import type { HighlightColor, HighlightStyle, Settings, ThemeMode } from './types'
+import type { HighlightColor, HighlightStyle, ReadingFont, Settings, ThemeMode } from './types'
 
 export const HIGHLIGHT_COLORS: Record<
   HighlightColor,
@@ -22,33 +22,38 @@ export const HIGHLIGHT_STYLES: Record<HighlightStyle, string> = {
 
 export const STYLE_KEYS = Object.keys(HIGHLIGHT_STYLES) as HighlightStyle[]
 
-const READING_THEME: Record<ThemeMode, { paper: string; ink: string; accent: string; blend: string; opacity: string }> = {
-  light: {
-    paper: '#f7f2e6',
+const READING_THEME: Record<
+  ThemeMode,
+  { paper: string; ink: string; accent: string; blend: string; opacity: string }
+> = {
+  paper: {
+    paper: '#fbf6ea',
     ink: '#241f19',
-    accent: '#a8492a',
+    accent: '#a3371c',
     blend: 'multiply',
     opacity: '0.34',
   },
-  dark: {
-    paper: '#201d18',
-    ink: '#ddd4c2',
-    accent: '#e08744',
-    blend: 'screen',
-    opacity: '0.26',
+  industrial: {
+    paper: '#d9d3b4',
+    ink: '#2a271d',
+    accent: '#a8332a',
+    blend: 'multiply',
+    opacity: '0.34',
   },
 }
 
-const READING_FONT: Record<Settings['readingFont'], string> = {
+/**
+ * Descanso is the default: low stroke contrast, so the text does not shimmer
+ * in long sessions. Editorial is Literata (made for screens), Legible is
+ * Atkinson Hyperlegible (distinct letterforms, tested for low vision).
+ */
+const READING_FONT: Record<ReadingFont, string> = {
   book: '',
-  serif: `font-family: 'Literata', 'Iowan Old Style', Georgia, serif !important;`,
-  sans: `font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif !important;`,
+  descanso: `font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif !important;`,
+  editorial: `font-family: 'Literata', Georgia, serif !important;`,
+  legible: `font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif !important;`,
 }
 
-/**
- * CSS injected into the book document. Kept small on purpose: only what the
- * reader owns (theme, rhythm, type scale). Everything else belongs to the book.
- */
 export function bookStyles(
   settings: Settings,
   theme: ThemeMode,
@@ -61,7 +66,7 @@ export function bookStyles(
   const opacity = fixedLayout ? '0.3' : t.opacity
   return `
     :root {
-      color-scheme: ${theme};
+      color-scheme: ${theme === 'paper' ? 'light' : 'dark'};
       --overlayer-highlight-opacity: ${opacity};
       --overlayer-highlight-blend-mode: ${blend};
     }

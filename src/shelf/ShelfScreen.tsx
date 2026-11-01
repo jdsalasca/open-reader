@@ -108,12 +108,12 @@ export default function ShelfScreen({
           <button
             className="icon-btn"
             type="button"
-            title={settings.theme === 'dark' ? t('theme.light') : t('theme.dark')}
+            title={settings.theme === 'industrial' ? t('theme.light') : t('theme.dark')}
             onClick={() =>
-              patchSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' })
+              patchSettings({ theme: settings.theme === 'industrial' ? 'paper' : 'industrial' })
             }
           >
-            <Icon name={settings.theme === 'dark' ? 'sun' : 'moon'} />
+            <Icon name={settings.theme === 'industrial' ? 'sun' : 'moon'} />
           </button>
           <button
             className={`icon-btn${settingsOpen ? ' is-active' : ''}`}
@@ -156,15 +156,15 @@ export default function ShelfScreen({
                 <div className="seg">
                   <button
                     type="button"
-                    className={settings.theme === 'light' ? 'is-on' : ''}
-                    onClick={() => patchSettings({ theme: 'light' })}
+                    className={settings.theme === 'paper' ? 'is-on' : ''}
+                    onClick={() => patchSettings({ theme: 'paper' })}
                   >
                     {t('theme.light')}
                   </button>
                   <button
                     type="button"
-                    className={settings.theme === 'dark' ? 'is-on' : ''}
-                    onClick={() => patchSettings({ theme: 'dark' })}
+                    className={settings.theme === 'industrial' ? 'is-on' : ''}
+                    onClick={() => patchSettings({ theme: 'industrial' })}
                   >
                     {t('theme.dark')}
                   </button>
@@ -302,39 +302,44 @@ export default function ShelfScreen({
         </section>
 
         <footer className="shelf__foot">
-          <div className="shelf__support">
-            <p>{t('shelf.supportHint')}</p>
-            <a className="support" href={DONATE_URL} target="_blank" rel="noreferrer noopener">
-              <Icon name="heart-filled" size={14} />
-              {t('shelf.support')}
+          <div className="shelf__foot-row">
+            <p className="shelf__note">{t('shelf.foot')}</p>
+            <div className="shelf__foot-actions">
+              <button className="btn btn--ghost" type="button" onClick={onExportAll}>
+                <Icon name="download" size={15} /> {t('shelf.export')}
+              </button>
+              <button
+                className="btn btn--ghost"
+                type="button"
+                onClick={() => backup.current?.click()}
+              >
+                <Icon name="upload" size={15} /> {t('shelf.import')}
+              </button>
+              <input
+                ref={backup}
+                type="file"
+                accept=".eridu,.json,application/json"
+                hidden
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (file) onImport(file)
+                  event.target.value = ''
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="shelf__sign">
+            <span className="shelf__sign-mark" aria-hidden="true" />
+            <span>OPEN READER</span>
+            <span className="shelf__sign-sep">·</span>
+            <a href={DONATE_URL} target="_blank" rel="noreferrer noopener">
+              <Icon name="heart-filled" size={11} /> {t('shelf.support')}
             </a>
-            <a className="support support--ghost" href={REPO_URL} target="_blank" rel="noreferrer noopener">
+            <span className="shelf__sign-sep">·</span>
+            <a href={REPO_URL} target="_blank" rel="noreferrer noopener">
               {t('shelf.source')}
             </a>
-          </div>
-          <p>{t('shelf.foot')}</p>
-          <div className="shelf__foot-actions">
-            <button className="btn btn--ghost" type="button" onClick={onExportAll}>
-              <Icon name="download" size={15} /> {t('shelf.export')}
-            </button>
-            <button
-              className="btn btn--ghost"
-              type="button"
-              onClick={() => backup.current?.click()}
-            >
-              <Icon name="upload" size={15} /> {t('shelf.import')}
-            </button>
-            <input
-              ref={backup}
-              type="file"
-              accept=".eridu,.json,application/json"
-              hidden
-              onChange={(event) => {
-                const file = event.target.files?.[0]
-                if (file) onImport(file)
-                event.target.value = ''
-              }}
-            />
           </div>
         </footer>
       </main>

@@ -1,6 +1,6 @@
-export type ThemeMode = 'light' | 'dark'
+export type ThemeMode = 'paper' | 'industrial'
 export type Flow = 'paginated' | 'scrolled'
-export type ReadingFont = 'book' | 'serif' | 'sans'
+export type ReadingFont = 'descanso' | 'editorial' | 'legible' | 'book'
 export type Zoom = 'fit-page' | 'fit-width'
 export type Locale = 'es' | 'en' | 'zh'
 export type LanguageSetting = Locale | 'auto'
@@ -81,6 +81,8 @@ export interface Settings {
   marginNotes: boolean
   /** 'auto' follows the device language. */
   language: LanguageSetting
+  /** Settings schema version, used to migrate old names. */
+  version: number
   /** Left rail visible; kept across sessions. */
   railOpen: boolean
 }

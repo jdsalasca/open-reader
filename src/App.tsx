@@ -36,7 +36,7 @@ export default function App() {
     root.dataset.theme = settings.theme
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', settings.theme === 'dark' ? '#0f0e0c' : '#e7e0d2')
+      ?.setAttribute('content', settings.theme === 'industrial' ? '#0f0e0c' : '#e7e0d2')
     saveSettings(settings)
   }, [settings])
 

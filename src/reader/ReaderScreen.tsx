@@ -406,7 +406,7 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
   }, [flash])
 
   const toggleTheme = useCallback(() => {
-    patchSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' })
+    patchSettings({ theme: settings.theme === 'industrial' ? 'paper' : 'industrial' })
   }, [patchSettings, settings.theme])
 
   const handleKey = useCallback(
@@ -584,7 +584,7 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
             {marks > 0 && <span className="badge">{marks}</span>}
           </button>
           <button className="icon-btn" type="button" onClick={toggleTheme} title={t('reader.theme')}>
-            <Icon name={settings.theme === 'dark' ? 'sun' : 'moon'} />
+            <Icon name={settings.theme === 'industrial' ? 'sun' : 'moon'} />
           </button>
           <button
             className="icon-btn"

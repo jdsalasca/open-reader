@@ -34,8 +34,8 @@ describe('settings', () => {
   })
 
   it('round-trips a partial update on top of the defaults', () => {
-    saveSettings({ ...DEFAULT_SETTINGS, theme: 'dark', fontSize: 120 })
-    expect(loadSettings()).toMatchObject({ theme: 'dark', fontSize: 120, flow: 'paginated' })
+    saveSettings({ ...DEFAULT_SETTINGS, theme: 'industrial', fontSize: 120 })
+    expect(loadSettings()).toMatchObject({ theme: 'industrial', fontSize: 120, flow: 'paginated' })
   })
 
   it('survives corrupt json', () => {

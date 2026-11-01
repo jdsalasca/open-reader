@@ -460,8 +460,8 @@ export default function Sidebar({
                 label={t('settings.theme')}
                 value={settings.theme}
                 options={[
-                  { value: 'light', label: t('theme.light') },
-                  { value: 'dark', label: t('theme.dark') },
+                  { value: 'paper', label: t('theme.light') },
+                  { value: 'industrial', label: t('theme.dark') },
                 ]}
                 onChange={(theme) => patchSettings({ theme })}
               />
@@ -495,9 +495,10 @@ export default function Sidebar({
                 label={t('settings.type')}
                 value={settings.readingFont}
                 options={[
+                  { value: 'descanso', label: t('settings.typeDescanso') },
+                  { value: 'editorial', label: t('settings.typeEditorial') },
+                  { value: 'legible', label: t('settings.typeLegible') },
                   { value: 'book', label: t('settings.typeBook') },
-                  { value: 'serif', label: t('settings.typeSerif') },
-                  { value: 'sans', label: t('settings.typeSans') },
                 ]}
                 onChange={(readingFont) => patchSettings({ readingFont })}
               />

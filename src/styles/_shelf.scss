@@ -172,8 +172,10 @@
 
 .hero__title {
   margin: 12px 0 14px;
-  font-size: clamp(2.2rem, 5.4vw, 4rem);
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-size: clamp(2.4rem, 5.6vw, 4.3rem);
+  font-weight: 900;
+  font-optical-sizing: auto;
   line-height: 0.94;
   letter-spacing: -0.03em;
 
@@ -371,8 +373,9 @@
 
 .card__title {
   margin-top: 2px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: var(--f-display);
+  font-size: 1.12rem;
+  font-weight: 700;
   line-height: 1.25;
 }
 
@@ -460,9 +463,9 @@
 
 .shelf__foot {
   display: grid;
-  gap: 14px;
-  padding-top: 20px;
-  border-top: 1px dashed var(--rule);
+  gap: 20px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule-2);
 
   p {
     max-width: 60ch;
@@ -472,45 +475,52 @@
   }
 }
 
-.shelf__support {
+.shelf__foot-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.support {
-  display: inline-flex;
+.shelf__sign {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--rule));
-  border-radius: var(--r-sm);
-  background: var(--accent-soft);
-  color: var(--accent);
+  gap: 9px;
+  padding-top: 4px;
+  color: var(--ink-3);
   font-family: var(--f-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-decoration: none;
+  font-size: 9px;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 
-  &:hover {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px solid transparent;
+    color: var(--ink-2);
+    text-decoration: none;
+    transition:
+      color 0.16s var(--ease),
+      border-color 0.16s var(--ease);
+
+    &:hover {
+      border-bottom-color: var(--accent);
+      color: var(--accent);
+    }
   }
 }
 
-.support--ghost {
-  border-color: var(--rule);
-  background: transparent;
-  color: var(--ink-2);
+.shelf__sign-mark {
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+}
 
-  &:hover {
-    border-color: var(--ink-3);
-    background: var(--bg-3);
-    color: var(--ink);
-  }
+.shelf__sign-sep {
+  color: var(--rule);
 }
 
 .shelf__foot-actions {
