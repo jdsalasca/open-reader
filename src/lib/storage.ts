@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS: Settings = {
   columnWidth: 620,
   readingFont: 'book',
   zoom: 'fit-page',
+  marginNotes: true,
 }
 
 export const EMPTY_PROGRESS = { cfi: '', fraction: 0, chapter: '' }

@@ -22,6 +22,8 @@ export interface Annotation {
   style: HighlightStyle
   chapter: string
   createdAt: number
+  /** "Me gusta" on the margin card. */
+  liked?: boolean
 }
 
 export interface TocItem {
@@ -71,6 +73,8 @@ export interface Settings {
   columnWidth: number
   readingFont: ReadingFont
   zoom: Zoom
+  /** Notes shown in the right margin, next to the page. */
+  marginNotes: boolean
 }
 
 export interface LocationInfo {

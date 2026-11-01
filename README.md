@@ -10,6 +10,9 @@ hay servidor y no hay subida.
   (por eso se puede seleccionar y resaltar).
 - **Notas y marcadores.** Resaltado, subrayado, ondulado y tachado, en ámbar,
   óxido, salvia, cielo e iris. Cada marca admite una nota escrita.
+- **Notas al margen.** Las notas del capítulo aparecen como tarjetas al lado de
+  la página, con su color, su cita y un «me gusta». Se apagan en Ajustes para
+  una lectura sin interrupciones.
 - **Sin backend.** Las anotaciones viven en `localStorage`, asociadas a una
   huella SHA-256 del archivo. Abres el mismo libro y todo sigue ahí.
 - **Dos temas.** *Papel* (claro) y *Grafito* (oscuro), ambos con la misma

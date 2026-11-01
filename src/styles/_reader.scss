@@ -95,6 +95,7 @@
 .stage {
   flex: 1;
   display: flex;
+  gap: 14px;
   min-width: 0;
   padding: clamp(10px, 1.8vw, 24px);
   background-color: var(--bg);

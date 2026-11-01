@@ -1,0 +1,187 @@
+// Margin comments: the notes of the section being read, next to the page
+// instead of inside it. Toggleable in Ajustes for distraction-free reading.
+
+.gutter {
+  display: flex;
+  flex: 0 0 286px;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 2px 0 0 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.gutter__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.gutter__kicker {
+  color: var(--ink-3);
+  font-family: var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.gutter__count {
+  padding: 1px 5px;
+  border: 1px solid var(--rule-2);
+  color: var(--ink-2);
+  font-family: var(--f-mono);
+  font-size: 9px;
+}
+
+.gutter__empty {
+  color: var(--ink-3);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.gutter__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0 2px 8px 0;
+  list-style: none;
+}
+
+.note-card {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 9px 10px 7px 13px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--sheet);
+  box-shadow:
+    2px 2px 0 -1px var(--sheet),
+    3px 3px 0 0 var(--rule-2);
+
+  // the little fold that makes it read as a paper slip
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(225deg, var(--bg) 50%, var(--rule-2) 50%);
+  }
+}
+
+.note-card__bar {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 5px;
+  width: 3px;
+  border-radius: 1px;
+}
+
+.note-card__body {
+  display: grid;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover q {
+    color: var(--accent);
+  }
+}
+
+.note-card__quote {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: var(--ink-2);
+  font-family: var(--f-read);
+  font-size: 0.83rem;
+  font-style: italic;
+  line-height: 1.45;
+  quotes: '«' '»';
+}
+
+.note-card__note {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  color: var(--ink);
+  font-size: 0.83rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.note-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--rule-2);
+}
+
+.note-card__like {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--rule);
+    color: var(--accent);
+  }
+
+  &.is-on {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+}
+
+.note-card__time {
+  flex: 1;
+  overflow: hidden;
+  color: var(--ink-3);
+  font-family: var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.note-card__delete {
+  width: 22px;
+  height: 22px;
+  opacity: 0;
+
+  .note-card:hover & {
+    opacity: 1;
+  }
+}
+
+.mark__tools .is-liked {
+  color: var(--accent);
+}
+
+@media (max-width: 1180px) {
+  .gutter {
+    display: none;
+  }
+}

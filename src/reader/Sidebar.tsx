@@ -18,6 +18,7 @@ interface Props {
   onGoTo: (cfi: string) => void
   onDelete: (id: string) => void
   onEditNote: (annotation: Annotation) => void
+  onLike: (annotation: Annotation) => void
   onExport: () => void
   onImport: (file: File) => void
   onClear: () => void
@@ -157,6 +158,7 @@ export default function Sidebar({
   onGoTo,
   onDelete,
   onEditNote,
+  onLike,
   onExport,
   onImport,
   onClear,
@@ -248,6 +250,15 @@ export default function Sidebar({
                       </span>
                     </button>
                     <div className="mark__tools">
+                      <button
+                        className={`icon-btn icon-btn--ghost${item.liked ? ' is-liked' : ''}`}
+                        type="button"
+                        title={item.liked ? 'Quitar me gusta' : 'Me gusta'}
+                        aria-pressed={Boolean(item.liked)}
+                        onClick={() => onLike(item)}
+                      >
+                        <Icon name={item.liked ? 'heart-filled' : 'heart'} size={15} />
+                      </button>
                       <button
                         className="icon-btn icon-btn--ghost"
                         type="button"
@@ -399,6 +410,20 @@ export default function Sidebar({
                 checked={settings.hyphens}
                 onChange={(hyphens) => patchSettings({ hyphens })}
               />
+            </section>
+
+            <section className="panel__group">
+              <h3>Anotaciones</h3>
+              <Toggle
+                label="Notas al margen"
+                checked={settings.marginNotes}
+                onChange={(marginNotes) => patchSettings({ marginNotes })}
+              />
+              <p className="panel__hint">
+                Muestra tus notas al lado de la página. Apágalo para una lectura
+                sin interrupciones; las notas siguen guardadas en la pestaña
+                «Notas».
+              </p>
             </section>
 
             <section className="panel__group">

@@ -23,6 +23,8 @@ export type IconName =
   | 'plus'
   | 'check'
   | 'note'
+  | 'heart'
+  | 'heart-filled'
 
 const PATHS: Record<IconName, React.ReactNode> = {
   'arrow-left': <path d="M12 5 5 12l7 7M5 12h14" />,
@@ -72,6 +74,15 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M5 3.5h9l5 5v12H5z" />
       <path d="M14 3.5v5h5M8.5 13h7M8.5 16.5h4" />
     </>
+  ),
+  heart: (
+    <path d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9z" />
+  ),
+  'heart-filled': (
+    <path
+      d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9z"
+      fill="currentColor"
+    />
   ),
 }
 

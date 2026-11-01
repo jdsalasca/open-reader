@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Sidebar, { type PanelTab } from './Sidebar'
 import SelectionPopover from './SelectionPopover'
 import NoteDialog from './NoteDialog'
+import MarginNotes from './MarginNotes'
 import { useFoliate, type BookInfo, type Rect } from './useFoliate'
 import {
   exportBackup,
@@ -452,6 +453,7 @@ export default function ReaderScreen({
           onEditNote={(annotation) =>
             setNote({ id: annotation.id, quote: annotation.text, initial: annotation.note })
           }
+          onLike={(annotation) => updateMark(annotation.id, { liked: !annotation.liked })}
           onExport={exportThis}
           onImport={importHere}
           onClear={clearMarks}
@@ -484,6 +486,19 @@ export default function ReaderScreen({
               </div>
             )}
           </div>
+
+          {settings.marginNotes && (
+            <MarginNotes
+              annotations={annotations.filter((item) => item.index === location?.index)}
+              chapter={location?.chapter ?? ''}
+              onOpen={(annotation) => {
+                void foliate.goTo(annotation.cfi)
+                setPopover(null)
+              }}
+              onLike={(annotation) => updateMark(annotation.id, { liked: !annotation.liked })}
+              onDelete={deleteMark}
+            />
+          )}
         </main>
 
         {rail && (
