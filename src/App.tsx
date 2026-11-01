@@ -1,0 +1,121 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import ReaderScreen from './reader/ReaderScreen'
+import ShelfScreen from './shelf/ShelfScreen'
+import { fileId } from './lib/book'
+import {
+  exportBackup,
+  importBackup,
+  listLibrary,
+  loadBook,
+  loadSettings,
+  removeFromLibrary,
+  saveSettings,
+} from './lib/storage'
+import { downloadText } from './lib/format'
+import type { BookRecord, LibraryEntry, Settings } from './lib/types'
+
+interface Session {
+  id: string
+  file: File
+}
+
+export default function App() {
+  const [settings, setSettings] = useState<Settings>(() => loadSettings())
+  const [session, setSession] = useState<Session | null>(null)
+  const [library, setLibrary] = useState<LibraryEntry[]>(() => listLibrary())
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.theme = settings.theme
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', settings.theme === 'dark' ? '#0f0e0c' : '#e7e0d2')
+    saveSettings(settings)
+  }, [settings])
+
+  const patchSettings = useCallback((patch: Partial<Settings>) => {
+    setSettings((current) => ({ ...current, ...patch }))
+  }, [])
+
+  const openFile = useCallback(async (file: File) => {
+    setBusy(true)
+    setError(null)
+    try {
+      const id = await fileId(file)
+      setSession({ id, file })
+    } catch {
+      setError('No se pudo leer el archivo. Intenta de nuevo.')
+    } finally {
+      setBusy(false)
+    }
+  }, [])
+
+  const exportAll = useCallback(() => {
+    const records = listLibrary()
+      .map((entry) => loadBook(entry.id))
+      .filter((record): record is BookRecord => Boolean(record))
+    downloadText('open-reader-notas.json', exportBackup(records))
+  }, [])
+
+  const importAll = useCallback(async (file: File) => {
+    try {
+      const count = importBackup(await file.text())
+      setLibrary(listLibrary())
+      setError(count ? null : 'Ese archivo no tiene notas de Open Reader.')
+    } catch {
+      setError('El archivo de notas está dañado o no es un respaldo de Open Reader.')
+    }
+  }, [])
+
+  const forget = useCallback((id: string) => {
+    removeFromLibrary(id)
+    setLibrary(listLibrary())
+  }, [])
+
+  const content = useMemo(() => {
+    if (session) {
+      return (
+        <ReaderScreen
+          key={session.id}
+          file={session.file}
+          bookId={session.id}
+          settings={settings}
+          patchSettings={patchSettings}
+          onExit={() => {
+            setSession(null)
+            setLibrary(listLibrary())
+          }}
+        />
+      )
+    }
+    return (
+      <ShelfScreen
+        library={library}
+        settings={settings}
+        patchSettings={patchSettings}
+        busy={busy}
+        error={error}
+        onDismissError={() => setError(null)}
+        onOpen={openFile}
+        onExportAll={exportAll}
+        onImport={importAll}
+        onForget={forget}
+      />
+    )
+  }, [
+    session,
+    settings,
+    patchSettings,
+    library,
+    busy,
+    error,
+    openFile,
+    exportAll,
+    importAll,
+    forget,
+  ])
+
+  return <div className="app">{content}</div>
+}

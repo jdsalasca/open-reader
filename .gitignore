@@ -1,0 +1,12 @@
+node_modules
+dist
+.vite
+*.local
+.DS_Store
+screenshots
+
+# pdf.js assets are copied from node_modules on install/build; the two CSS
+# files are not shipped by pdfjs-dist, so they are committed.
+public/pdfjs/*
+!public/pdfjs/text_layer_builder.css
+!public/pdfjs/annotation_layer_builder.css

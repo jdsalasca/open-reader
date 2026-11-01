@@ -1,0 +1,64 @@
+// Design tokens: "papercraft industrial".
+// Warm paper, steel rules, mono labels, one oxide accent. Light and dark.
+
+:root {
+  --f-ui: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+  --f-read: 'Literata', Georgia, 'Times New Roman', serif;
+
+  --r-sm: 2px;
+  --r-md: 3px;
+  --r-lg: 6px;
+
+  --rail-w: 320px;
+  --topbar-h: 56px;
+  --status-h: 44px;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #e7e0d2;
+  --bg-2: #efe9dd;
+  --bg-3: #e2dac9;
+  --sheet: #f7f2e6;
+  --ink: #241f19;
+  --ink-2: #5c5548;
+  --ink-3: #8b8170;
+  --rule: #c9bfa9;
+  --rule-2: #dcd3c0;
+  --accent: #a8492a;
+  --accent-2: #8a3a20;
+  --accent-soft: rgba(168, 73, 42, 0.1);
+  --danger: #9c2f2f;
+  --on-accent: #fdf6ec;
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.55);
+  --shadow-2: 0 22px 40px -30px rgba(40, 28, 10, 0.65);
+  --grain: 0.4;
+  --grain-blend: multiply;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0f0e0c;
+  --bg-2: #16140f;
+  --bg-3: #211e17;
+  --sheet: #201d18;
+  --ink: #ece4d2;
+  --ink-2: #a79d8a;
+  --ink-3: #6f6757;
+  --rule: #35302a;
+  --rule-2: #262319;
+  --accent: #e08744;
+  --accent-2: #f0a468;
+  --accent-soft: rgba(224, 135, 68, 0.12);
+  --danger: #d4695f;
+  --on-accent: #1a1309;
+  --shadow-1: 0 1px 0 rgba(0, 0, 0, 0.6);
+  --shadow-2: 0 26px 50px -34px #000;
+  --grain: 0.3;
+  --grain-blend: soft-light;
+}

@@ -1,0 +1,26 @@
+# Open Reader en Caddy.
+# Sirve el contenido de dist/ y aplica la CSP que el lector necesita.
+#
+#   sudo cp -r dist /var/www/open-reader
+#   sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+
+open-library.eridu.top {
+	root * /var/www/open-reader
+	encode zstd gzip
+
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; frame-src 'self' blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	@immutable path /assets/* /pdfjs/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	@html path /index.html
+	header @html Cache-Control "no-cache"
+
+	try_files {path} /index.html
+	file_server
+}
