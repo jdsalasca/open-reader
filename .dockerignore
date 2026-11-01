@@ -3,3 +3,9 @@ dist
 .git
 screenshots
 *.log
+
+# desktop and tooling sources are not part of the web image
+src-tauri
+release
+build
+.github
