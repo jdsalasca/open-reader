@@ -7,6 +7,8 @@ sale de tu equipo: no hay cuentas, no hay servidor y no hay subida.
 
 **En vivo:** https://open-library.eridu.top · **Escritorio:** `release/OpenReader.exe`
 
+[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/jdsalasca)
+
 ## Qué hace
 
 - **Un motor para todos los formatos.** [foliate-js](https://github.com/johnfactotum/foliate-js)
@@ -139,8 +141,10 @@ inyecta su beacon en el HTML proxificado; `connect-src` sigue en `'self'`.
 
 ## Apoyar el proyecto
 
-El pie de la portada tiene un botón **Apóyanos**. El enlace se configura en
-tiempo de compilación:
+[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/jdsalasca)
+
+El pie de la portada tiene el botón **Apóyanos en Ko-fi**. El enlace se configura
+en tiempo de compilación:
 
 ```bash
 cp .env.example .env

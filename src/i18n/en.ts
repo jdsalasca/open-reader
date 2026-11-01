@@ -165,7 +165,7 @@ export const en: Record<MessageKey, string> = {
 
   'error.title': 'Something broke',
   'error.body': 'The app failed. Reload the page; your notes are still saved.',
-  'shelf.support': "Support us",
+  'shelf.support': "Support us on Ko-fi",
   'shelf.supportHint': "If it helps, buy me a coffee.",
   'shelf.source': "Source",
   'settings.storage': "Storage",
@@ -173,3 +173,4 @@ export const en: Record<MessageKey, string> = {
   'settings.storageHint': "Your notes and opened books live here, in this browser. There is no server.",
   'error.reload': 'Reload',
 }
+

@@ -165,7 +165,7 @@ export const es = {
 
   'error.title': 'Algo se rompió',
   'error.body': 'La app falló. Recarga la página; tus notas siguen guardadas.',
-  'shelf.support': "Apóyanos",
+  'shelf.support': "Apóyanos en Ko-fi",
   'shelf.supportHint': "Si te sirve, invítame un café.",
   'shelf.source': "Código",
   'settings.storage': "Almacenamiento",
@@ -175,3 +175,4 @@ export const es = {
 } as const
 
 export type MessageKey = keyof typeof es
+
