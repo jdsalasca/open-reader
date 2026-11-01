@@ -151,6 +151,11 @@ npm run build
 O se cambia directamente en `src/lib/links.ts`. Sirve cualquier URL de donación:
 Ko-fi, Buy Me a Coffee, GitHub Sponsors o PayPal.me.
 
+> **Desde Colombia:** Ko-fi paga directo a tu **PayPal** (Ko-fi nunca retiene el
+> dinero), y PayPal permite retirar a un banco colombiano. **Buy Me a Coffee ya
+> no paga por PayPal**, solo por Stripe, que no opera en Colombia; por eso el
+> botón usa Ko-fi.
+
 ## Estructura
 
 ```
