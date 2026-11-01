@@ -55,7 +55,7 @@ export default function InstallButton({ compact = false }: { compact?: boolean }
         title={t('shelf.install')}
       >
         <Icon name="download" size={compact ? 18 : 15} />
-        {!compact && t('shelf.install')}
+        {!compact && <span className="install__label">{t('shelf.install')}</span>}
       </button>
       {hint && <p className="install__hint">{t('shelf.installHint')}</p>}
     </div>
