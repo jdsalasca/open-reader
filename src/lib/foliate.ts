@@ -2,6 +2,14 @@
 import '../vendor/foliate/view.js'
 import type { Annotation, LocationInfo, TocItem } from './types'
 
+export const bookTitle = (metadata?: Record<string, unknown>): string =>
+  labelOf(metadata?.title)
+
+export const bookAuthor = (metadata?: Record<string, unknown>): string => {
+  const author = metadata?.author ?? metadata?.creator
+  return labelOf(author)
+}
+
 export interface FoliateLocation {
   fraction: number
   cfi: string
@@ -41,7 +49,24 @@ export interface FoliateView extends HTMLElement {
   book: FoliateBook
   isFixedLayout: boolean
   lastLocation?: FoliateLocation
+  search: (options: {
+    query: string
+    draw?: unknown
+    drawOptions?: Record<string, unknown>
+  }) => AsyncGenerator<FoliateSearchChunk>
+  clearSearch: () => void
 }
+
+export type FoliateSearchChunk =
+  | 'done'
+  | { progress: number }
+  | {
+      label?: string
+      subitems: {
+        cfi: string
+        excerpt: { pre: string; match: string; post: string }
+      }[]
+    }
 
 export function createView(): FoliateView {
   return document.createElement('foliate-view') as FoliateView
@@ -69,23 +94,4 @@ const labelOf = (value: unknown): string => {
     if (typeof first === 'string') return first
   }
   return ''
-}
-
-export const bookTitle = (metadata?: Record<string, unknown>): string =>
-  labelOf(metadata?.title)
-
-export const bookAuthor = (metadata?: Record<string, unknown>): string => {
-  const author = metadata?.author ?? metadata?.creator
-  return labelOf(author)
-}
-
-export function normalizeToc(items?: TocItem[] | null): TocItem[] {
-  if (!Array.isArray(items)) return []
-  return items
-    .filter(Boolean)
-    .map((item) => ({
-      label: labelOf(item.label) || 'Sin título',
-      href: String(item.href ?? ''),
-      subitems: normalizeToc(item.subitems),
-    }))
 }

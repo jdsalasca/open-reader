@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Sidebar, { type PanelTab } from './Sidebar'
+import Sidebar, { type PanelTab, type SearchState } from './Sidebar'
 import SelectionPopover from './SelectionPopover'
 import NoteDialog from './NoteDialog'
+import QuoteDialog from './QuoteDialog'
 import MarginNotes from './MarginNotes'
 import { useFoliate, type BookInfo, type Rect } from './useFoliate'
 import {
@@ -11,6 +12,7 @@ import {
   saveBook,
   touchLibrary,
 } from '../lib/storage'
+import { bookToMarkdown } from '../lib/exportMarkdown'
 import { formatOf, titleFromName } from '../lib/book'
 import { downloadText, percent, uid } from '../lib/format'
 import { Icon } from '../components/Icons'
@@ -47,6 +49,16 @@ interface NoteTarget {
   initial: string
 }
 
+interface QuoteTarget {
+  id?: string
+  text: string
+  color: HighlightColor
+  saved: boolean
+  cfi?: string
+  index?: number
+  chapter?: string
+}
+
 export default function ReaderScreen({
   file,
   bookId,
@@ -70,6 +82,13 @@ export default function ReaderScreen({
   const [selection, setSelection] = useState<SelectionInfo | null>(null)
   const [popover, setPopover] = useState<PopoverState | null>(null)
   const [note, setNote] = useState<NoteTarget | null>(null)
+  const [quote, setQuote] = useState<QuoteTarget | null>(null)
+  const [search, setSearch] = useState<SearchState>({
+    query: '',
+    progress: 0,
+    running: false,
+    results: [],
+  })
   const [tab, setTab] = useState<PanelTab>('toc')
   const [rail, setRail] = useState(() => window.innerWidth > 980)
   const [toast, setToast] = useState<string | null>(null)
@@ -152,7 +171,12 @@ export default function ReaderScreen({
   }, [])
 
   const createMark = useCallback(
-    (extra: { color?: HighlightColor; style?: HighlightStyle; note?: string }) => {
+    (extra: {
+      color?: HighlightColor
+      style?: HighlightStyle
+      note?: string
+      quoted?: boolean
+    }) => {
       if (!selection) return
       const annotation: Annotation = {
         id: uid(),
@@ -165,6 +189,7 @@ export default function ReaderScreen({
         style: extra.style ?? 'highlight',
         chapter: location?.chapter ?? '',
         createdAt: Date.now(),
+        quoted: extra.quoted,
       }
       setAnnotations((list) => [...list, annotation])
       foliate.addAnnotation(annotation)
@@ -232,6 +257,110 @@ export default function ReaderScreen({
     [popover, updateMark, createMark],
   )
 
+  const runSearch = useCallback(
+    async (raw: string) => {
+      const query = raw.trim()
+      if (query.length < 2) {
+        foliate.clearSearch()
+        setSearch({ query, progress: 0, running: false, results: [] })
+        return
+      }
+      setSearch({ query, progress: 0, running: true, results: [] })
+      await foliate.search(
+        query,
+        (progress) =>
+          setSearch((current) => (current.query === query ? { ...current, progress } : current)),
+        (label, items) =>
+          setSearch((current) =>
+            current.query === query
+              ? { ...current, results: [...current.results, { label, items }] }
+              : current,
+          ),
+      )
+      setSearch((current) =>
+        current.query === query ? { ...current, running: false } : current,
+      )
+    },
+    [foliate],
+  )
+
+  const clearSearch = useCallback(() => {
+    foliate.clearSearch()
+    setSearch({ query: '', progress: 0, running: false, results: [] })
+  }, [foliate])
+
+  const openQuote = useCallback(
+    (source: Annotation | null) => {
+      if (source) {
+        setQuote({
+          id: source.id,
+          text: source.text,
+          color: source.color,
+          saved: Boolean(source.quoted),
+          cfi: source.cfi,
+          index: source.index,
+          chapter: source.chapter,
+        })
+        return
+      }
+      if (selection) {
+        setQuote({
+          text: selection.text,
+          color: 'amber',
+          saved: false,
+          cfi: selection.cfi,
+          index: selection.index,
+          chapter: location?.chapter ?? '',
+        })
+      }
+    },
+    [selection, location?.chapter],
+  )
+
+  const saveQuote = useCallback(() => {
+    if (!quote) return
+    if (quote.id) {
+      updateMark(quote.id, { quoted: true })
+    } else if (quote.cfi) {
+      const annotation: Annotation = {
+        id: uid(),
+        kind: 'highlight',
+        cfi: quote.cfi,
+        index: quote.index ?? 0,
+        text: quote.text,
+        note: '',
+        color: quote.color,
+        style: 'highlight',
+        chapter: quote.chapter ?? '',
+        createdAt: Date.now(),
+        quoted: true,
+      }
+      setAnnotations((list) => [...list, annotation])
+      foliate.addAnnotation(annotation)
+      foliate.deselect()
+      setSelection(null)
+      setPopover(null)
+      setQuote((current) =>
+        current ? { ...current, saved: true, id: annotation.id } : current,
+      )
+    }
+    flash('Guardada en citas')
+  }, [quote, updateMark, foliate, flash])
+
+  const exportMarkdown = useCallback(() => {
+    if (!meta) return
+    const slug =
+      meta.title
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 48) || 'libro'
+    downloadText(`notas-${slug}.md`, bookToMarkdown({ meta, progress, annotations }))
+    flash('Markdown exportado')
+  }, [meta, progress, annotations, flash])
+
   const toggleFull = useCallback(async () => {
     try {
       if (document.fullscreenElement) await document.exitFullscreen()
@@ -250,6 +379,12 @@ export default function ReaderScreen({
       const target = event.target as HTMLElement | null
       if (target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
       const key = event.key
+      if ((event.ctrlKey || event.metaKey) && (key === 'f' || key === 'F')) {
+        event.preventDefault()
+        setTab('search')
+        setRail(true)
+        return
+      }
       const goNext = () => {
         event.preventDefault()
         foliate.next()
@@ -347,7 +482,7 @@ export default function ReaderScreen({
   const exportThis = () => {
     if (!meta) return
     downloadText(
-      `notas-${meta.title.replace(/[^\w\-]+/g, '-').slice(0, 40) || 'libro'}.json`,
+      `notas-${meta.title.replace(/[^\w\-]+/g, '-').slice(0, 40) || 'libro'}.eridu`,
       exportBackup([{ meta, progress, annotations }]),
     )
     flash('Notas exportadas')
@@ -454,7 +589,12 @@ export default function ReaderScreen({
             setNote({ id: annotation.id, quote: annotation.text, initial: annotation.note })
           }
           onLike={(annotation) => updateMark(annotation.id, { liked: !annotation.liked })}
+          onQuote={(annotation) => openQuote(annotation)}
+          search={search}
+          onSearch={runSearch}
+          onClearSearch={clearSearch}
           onExport={exportThis}
+          onExportMarkdown={exportMarkdown}
           onImport={importHere}
           onClear={clearMarks}
           onClose={() => setRail(false)}
@@ -561,11 +701,7 @@ export default function ReaderScreen({
           rect={popover.rect}
           onApply={applyMark}
           onNote={openNote}
-          onCopy={() => {
-            const text = current?.text ?? selection?.text ?? ''
-            void navigator.clipboard?.writeText(text)
-            flash('Texto copiado')
-          }}
+          onQuote={() => openQuote(null)}
           onDelete={current ? () => deleteMark(current.id) : undefined}
           onClose={() => {
             setPopover(null)
@@ -581,6 +717,17 @@ export default function ReaderScreen({
         initial={note?.initial ?? ''}
         onSave={saveNote}
         onClose={() => setNote(null)}
+      />
+
+      <QuoteDialog
+        open={Boolean(quote)}
+        text={quote?.text ?? ''}
+        author={info?.author ?? ''}
+        title={info?.title ?? titleFromName(file.name)}
+        color={quote?.color ?? 'amber'}
+        saved={Boolean(quote?.saved)}
+        onSave={saveQuote}
+        onClose={() => setQuote(null)}
       />
 
       {toast && <div className="toast">{toast}</div>}

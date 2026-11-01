@@ -24,6 +24,8 @@ export interface Annotation {
   createdAt: number
   /** "Me gusta" on the margin card. */
   liked?: boolean
+  /** Saved to the quotes collection (the shareable card). */
+  quoted?: boolean
 }
 
 export interface TocItem {

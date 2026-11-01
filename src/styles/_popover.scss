@@ -211,3 +211,21 @@
   display: flex;
   gap: 8px;
 }
+
+/* --- quote card --------------------------------------------------------- */
+
+.dialog--quote {
+  max-width: min(940px, 94vw);
+}
+
+.quote-preview {
+  padding: 8px;
+  border: 1px solid var(--rule-2);
+  background: var(--bg);
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}

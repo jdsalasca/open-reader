@@ -6,7 +6,7 @@ export default defineConfig({
   build: { target: 'es2022' },
   server: {
     port: 5177,
-    watch: { ignored: ['**/src-tauri/**', '**/dist/**'] },
+    watch: { ignored: ['**/src-tauri/**', '**/dist/**', '**/public/pdfjs/**'] },
   },
   test: {
     environment: 'jsdom',

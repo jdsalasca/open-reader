@@ -56,7 +56,7 @@ export default function App() {
     const records = listLibrary()
       .map((entry) => loadBook(entry.id))
       .filter((record): record is BookRecord => Boolean(record))
-    downloadText('open-reader-notas.json', exportBackup(records))
+    downloadText('open-reader-notas.eridu', exportBackup(records))
   }, [])
 
   const importAll = useCallback(async (file: File) => {

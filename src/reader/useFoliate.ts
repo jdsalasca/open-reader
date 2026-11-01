@@ -8,16 +8,16 @@ import type {
   TocItem,
 } from '../lib/types'
 import { bookStyles } from '../lib/reading'
-import { drawAnnotation } from '../lib/mark'
+import { drawAnnotation, searchDraw, searchDrawOptions } from '../lib/mark'
 import {
   bookAuthor,
   bookTitle,
   createView,
-  normalizeToc,
   toLocation,
   type FoliateLocation,
   type FoliateView,
 } from '../lib/foliate'
+import { normalizeToc } from '../lib/toc'
 
 export interface BookInfo {
   title: string
@@ -87,6 +87,7 @@ export function useFoliate(options: FoliateOptions) {
   const redrawRef = useRef<() => void>(() => undefined)
   const retryTimer = useRef<number | undefined>(undefined)
   const retries = useRef(0)
+  const searchToken = useRef(0)
 
   handlers.current = options
   annotationsRef.current = options.annotations
@@ -366,6 +367,49 @@ export function useFoliate(options: FoliateOptions) {
       .catch(() => undefined)
   }, [])
 
+  /**
+   * Whole-book search. foliate walks the sections and yields progress plus the
+   * matches of each one, so the panel can fill up while it works.
+   */
+  const search = useCallback(
+    async (
+      query: string,
+      onProgress: (value: number) => void,
+      onResults: (
+        label: string,
+        items: { cfi: string; excerpt: { pre: string; match: string; post: string } }[],
+      ) => void,
+    ) => {
+      const view = viewRef.current
+      if (!view?.search) return
+      searchToken.current += 1
+      const token = searchToken.current
+      view.clearSearch()
+      try {
+        for await (const chunk of view.search({
+          query,
+          draw: searchDraw,
+          drawOptions: searchDrawOptions,
+        })) {
+          if (searchToken.current !== token) return
+          if (chunk === 'done') break
+          if ('progress' in chunk) onProgress(chunk.progress)
+          if ('subitems' in chunk && chunk.subitems.length) {
+            onResults(chunk.label ?? '', chunk.subitems)
+          }
+        }
+      } catch (error) {
+        console.warn('[search]', error)
+      }
+    },
+    [],
+  )
+
+  const clearSearch = useCallback(() => {
+    searchToken.current += 1
+    viewRef.current?.clearSearch()
+  }, [])
+
   return {
     containerRef,
     goTo,
@@ -378,5 +422,8 @@ export function useFoliate(options: FoliateOptions) {
     addAnnotation,
     removeAnnotation,
     redraw,
+    search,
+    clearSearch,
   }
 }
+

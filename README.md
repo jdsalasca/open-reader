@@ -2,8 +2,10 @@
 
 Lector de libros en el navegador. Abre el archivo que quieras —**EPUB, MOBI,
 AZW3, FB2, CBZ o PDF**—, resalta en cinco colores, subraya, tacha, deja notas al
-margen y marca páginas. El archivo nunca sale de tu equipo: no hay cuentas, no
-hay servidor y no hay subida.
+margen, marca páginas, busca dentro del libro y guarda citas. El archivo nunca
+sale de tu equipo: no hay cuentas, no hay servidor y no hay subida.
+
+En vivo: **https://open-library.eridu.top** · Escritorio: `release/OpenReader.exe`
 
 - **Un solo motor para todos los formatos.** [foliate-js](https://github.com/johnfactotum/foliate-js)
   renderiza texto reflowable y páginas fijas, con capa de texto real en los PDF
@@ -13,6 +15,14 @@ hay servidor y no hay subida.
 - **Notas al margen.** Las notas del capítulo aparecen como tarjetas al lado de
   la página, con su color, su cita y un «me gusta». Se apagan en Ajustes para
   una lectura sin interrupciones.
+- **Buscar en el libro.** `Ctrl+F`, resultados agrupados por capítulo con la
+  frase y el salto exacto al pasaje.
+- **Citas.** Selecciona un fragmento y guárdalo como cita: sale una tarjeta con
+  el texto, el autor y el libro, descargable en PNG. Las citas quedan marcadas
+  con ★ y salen aparte en la exportación.
+- **Exporta a `.eridu` o Markdown.** El `.eridu` es el respaldo completo (JSON
+  con extensión propia); el Markdown deja las notas listas para pegar en un
+  trabajo, con cita textual, capítulo y nota.
 - **Sin backend.** Las anotaciones viven en `localStorage`, asociadas a una
   huella SHA-256 del archivo. Abres el mismo libro y todo sigue ahí.
 - **Dos temas.** *Papel* (claro) y *Grafito* (oscuro), ambos con la misma
@@ -42,8 +52,9 @@ Requisitos: Node 20+.
 2. Bajo `openreader.v1.book.<id>` se guardan las anotaciones y la posición de
    lectura.
 3. La estantería (`openreader.v1.library`) recuerda título, formato y progreso.
-4. **Exportar / Importar** produce un JSON con todo, para mover las notas entre
-   equipos o antes de limpiar los datos del navegador.
+4. **Exportar `.eridu`** produce un JSON con todo (`format: "eridu"`), para
+   mover las notas entre equipos o antes de limpiar los datos del navegador.
+   Se importa igual, y también acepta los `.json` de versiones anteriores.
 
 No se guarda el archivo del libro, solo sus marcas. Si abres el mismo PDF desde
 otra ruta, el identificador sigue coincidiendo.
@@ -54,6 +65,7 @@ otra ruta, el identificador sigue coincidiendo.
 | --- | --- |
 | `←` `→` / `PageUp` `PageDown` / `Espacio` | Pasar página |
 | `Inicio` / `Fin` | Principio / final del libro |
+| `Ctrl+F` | Buscar en el libro |
 | `b` | Marcar la página actual |
 | `f` | Pantalla completa |
 | `t` | Cambiar tema |

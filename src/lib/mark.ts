@@ -46,3 +46,7 @@ export function drawAnnotation(
     : base
   draw(fn, { color, width: 2.2, noteColor })
 }
+
+/** How search hits are marked in the page: a quiet accent box. */
+export const searchDraw = Overlayer.outline
+export const searchDrawOptions = { color: '#a8492a', width: 2, radius: 2 }

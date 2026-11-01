@@ -111,14 +111,18 @@ export function clearBook(id: string): void {
 
 export interface Backup {
   app: 'open-reader'
+  format: 'eridu'
   version: 1
   exportedAt: string
   books: BookRecord[]
 }
 
+export const BACKUP_EXTENSION = '.eridu'
+
 export function exportBackup(records: BookRecord[]): string {
   const backup: Backup = {
     app: 'open-reader',
+    format: 'eridu',
     version: 1,
     exportedAt: new Date().toISOString(),
     books: records,

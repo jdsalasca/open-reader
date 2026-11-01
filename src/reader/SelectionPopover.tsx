@@ -10,7 +10,7 @@ interface Props {
   rect: Rect
   onApply: (patch: { color?: HighlightColor; style?: HighlightStyle }) => void
   onNote: () => void
-  onCopy: () => void
+  onQuote: () => void
   onDelete?: () => void
   onClose: () => void
 }
@@ -28,7 +28,7 @@ export default function SelectionPopover({
   rect,
   onApply,
   onNote,
-  onCopy,
+  onQuote,
   onDelete,
   onClose,
 }: Props) {
@@ -110,9 +110,9 @@ export default function SelectionPopover({
           <Icon name="note" size={16} />
           {annotation?.note ? 'Editar nota' : 'Nota'}
         </button>
-        <button type="button" className="pop__action" onClick={onCopy}>
-          <Icon name="book" size={16} />
-          Copiar
+        <button type="button" className="pop__action" onClick={onQuote}>
+          <Icon name="quote" size={16} />
+          Citar
         </button>
         {mode === 'edit' && onDelete && (
           <button type="button" className="pop__action pop__action--danger" onClick={onDelete}>

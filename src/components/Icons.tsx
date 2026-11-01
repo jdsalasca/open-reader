@@ -25,6 +25,7 @@ export type IconName =
   | 'note'
   | 'heart'
   | 'heart-filled'
+  | 'quote'
 
 const PATHS: Record<IconName, React.ReactNode> = {
   'arrow-left': <path d="M12 5 5 12l7 7M5 12h14" />,
@@ -83,6 +84,11 @@ const PATHS: Record<IconName, React.ReactNode> = {
       d="M12 20s-7-4.3-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.7-7 9-7 9z"
       fill="currentColor"
     />
+  ),
+  quote: (
+    <>
+      <path d="M9 7H5v6h4v4H5M19 7h-4v6h4v4h-4" />
+    </>
   ),
 }
 

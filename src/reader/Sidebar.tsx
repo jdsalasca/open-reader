@@ -5,7 +5,19 @@ import { percent, relativeTime } from '../lib/format'
 import { Icon } from '../components/Icons'
 import type { Annotation, LocationInfo, Settings, TocItem } from '../lib/types'
 
-export type PanelTab = 'toc' | 'notes' | 'marks' | 'settings'
+export type PanelTab = 'toc' | 'search' | 'notes' | 'marks' | 'settings'
+
+export interface SearchGroup {
+  label: string
+  items: { cfi: string; excerpt: { pre: string; match: string; post: string } }[]
+}
+
+export interface SearchState {
+  query: string
+  progress: number
+  running: boolean
+  results: SearchGroup[]
+}
 
 interface Props {
   tab: PanelTab
@@ -14,12 +26,17 @@ interface Props {
   annotations: Annotation[]
   location: LocationInfo | null
   settings: Settings
+  search: SearchState
   patchSettings: (patch: Partial<Settings>) => void
   onGoTo: (cfi: string) => void
   onDelete: (id: string) => void
   onEditNote: (annotation: Annotation) => void
   onLike: (annotation: Annotation) => void
+  onQuote: (annotation: Annotation) => void
+  onSearch: (query: string) => void
+  onClearSearch: () => void
   onExport: () => void
+  onExportMarkdown: () => void
   onImport: (file: File) => void
   onClear: () => void
   onClose: () => void
@@ -154,18 +171,25 @@ export default function Sidebar({
   annotations,
   location,
   settings,
+  search,
   patchSettings,
   onGoTo,
   onDelete,
   onEditNote,
   onLike,
+  onQuote,
+  onSearch,
+  onClearSearch,
   onExport,
+  onExportMarkdown,
   onImport,
   onClear,
   onClose,
 }: Props) {
   const backup = useRef<HTMLInputElement | null>(null)
+  const query = useRef<HTMLInputElement | null>(null)
   const notes = annotations.filter((item) => item.kind === 'highlight')
+  const quotes = notes.filter((item) => item.quoted)
   const bookmarks = annotations.filter((item) => item.kind === 'bookmark')
 
   return (
@@ -183,6 +207,7 @@ export default function Sidebar({
         {(
           [
             ['toc', 'Índice'],
+            ['search', 'Buscar'],
             ['notes', 'Notas'],
             ['marks', 'Marcas'],
             ['settings', 'Ajustes'],
@@ -221,6 +246,76 @@ export default function Sidebar({
           </div>
         )}
 
+        {tab === 'search' && (
+          <div className="panel panel--search">
+            <form
+              className="search"
+              onSubmit={(event) => {
+                event.preventDefault()
+                onSearch(query.current?.value ?? '')
+              }}
+            >
+              <input
+                ref={query}
+                type="search"
+                placeholder="Buscar en el libro…"
+                defaultValue={search.query}
+                autoFocus
+                aria-label="Buscar en el libro"
+              />
+              <button className="btn btn--ghost" type="submit" disabled={search.running}>
+                {search.running ? '…' : 'Ir'}
+              </button>
+            </form>
+
+            {info?.fixedLayout && (
+              <p className="empty">
+                La búsqueda no está disponible en PDF: el archivo no expone el texto por
+                capítulos.
+              </p>
+            )}
+
+            {search.running && (
+              <div className="search__progress" aria-hidden="true">
+                <span style={{ width: `${Math.round(search.progress * 100)}%` }} />
+              </div>
+            )}
+
+            {!search.running && search.query && !search.results.length && !info?.fixedLayout && (
+              <p className="empty">Sin coincidencias para «{search.query}».</p>
+            )}
+
+            {search.results.length > 0 && (
+              <div className="search__meta">
+                <span>
+                  {search.results.reduce((total, group) => total + group.items.length, 0)}{' '}
+                  coincidencias
+                </span>
+                <button type="button" className="search__clear" onClick={onClearSearch}>
+                  Limpiar
+                </button>
+              </div>
+            )}
+
+            {search.results.map((group) => (
+              <section key={group.label + group.items[0]?.cfi} className="search__group">
+                <h3>{group.label || 'Sin capítulo'}</h3>
+                <ul>
+                  {group.items.map((item) => (
+                    <li key={item.cfi}>
+                      <button type="button" onClick={() => onGoTo(item.cfi)}>
+                        {item.excerpt.pre}
+                        <mark>{item.excerpt.match}</mark>
+                        {item.excerpt.post}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
+
         {tab === 'notes' && (
           <div className="panel">
             {notes.length === 0 ? (
@@ -245,11 +340,20 @@ export default function Sidebar({
                         <q>{item.text}</q>
                         {item.note && <span className="mark__note">{item.note}</span>}
                         <span className="mark__meta">
+                          {item.quoted && <b className="mark__star">★ cita</b>}
                           {item.chapter || 'Sin capítulo'} · {relativeTime(item.createdAt)}
                         </span>
                       </span>
                     </button>
                     <div className="mark__tools">
+                      <button
+                        className={`icon-btn icon-btn--ghost${item.quoted ? ' is-liked' : ''}`}
+                        type="button"
+                        title="Citar"
+                        onClick={() => onQuote(item)}
+                      >
+                        <Icon name="quote" size={15} />
+                      </button>
                       <button
                         className={`icon-btn icon-btn--ghost${item.liked ? ' is-liked' : ''}`}
                         type="button"
@@ -279,6 +383,9 @@ export default function Sidebar({
                   </li>
                 ))}
               </ul>
+            )}
+            {quotes.length > 0 && (
+              <p className="panel__foot">{quotes.length} en citas</p>
             )}
           </div>
         )}
@@ -451,7 +558,7 @@ export default function Sidebar({
               </p>
               <div className="panel__actions">
                 <button className="btn btn--ghost" type="button" onClick={onExport}>
-                  <Icon name="download" size={15} /> Exportar
+                  <Icon name="download" size={15} /> .eridu
                 </button>
                 <button
                   className="btn btn--ghost"
@@ -461,13 +568,16 @@ export default function Sidebar({
                   <Icon name="upload" size={15} /> Importar
                 </button>
               </div>
+              <button className="btn btn--ghost" type="button" onClick={onExportMarkdown}>
+                <Icon name="note" size={15} /> Exportar Markdown
+              </button>
               <button className="btn btn--danger" type="button" onClick={onClear}>
                 <Icon name="trash" size={15} /> Borrar notas del libro
               </button>
               <input
                 ref={backup}
                 type="file"
-                accept="application/json,.json"
+                accept=".eridu,.json,application/json"
                 hidden
                 onChange={(event) => {
                   const file = event.target.files?.[0]

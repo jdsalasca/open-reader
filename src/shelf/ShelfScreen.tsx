@@ -223,11 +223,12 @@ export default function ShelfScreen({
         <footer className="shelf__foot">
           <p>
             Tus notas viven en este navegador, asociadas a la huella del archivo.
-            Si cambias de equipo, exporta el respaldo y vuelve a importarlo.
+            Exporta un <b>.eridu</b> para llevarlas a otro equipo y vuelve a
+            importarlo aquí.
           </p>
           <div className="shelf__foot-actions">
             <button className="btn btn--ghost" type="button" onClick={onExportAll}>
-              <Icon name="download" size={15} /> Exportar notas
+              <Icon name="download" size={15} /> Exportar .eridu
             </button>
             <button
               className="btn btn--ghost"
@@ -239,7 +240,7 @@ export default function ShelfScreen({
             <input
               ref={backup}
               type="file"
-              accept="application/json,.json"
+              accept=".eridu,.json,application/json"
               hidden
               onChange={(event) => {
                 const file = event.target.files?.[0]
