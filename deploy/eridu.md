@@ -4,34 +4,42 @@ Pasos para el servidor `atopnuc` (ver `server/README.md` del workspace). Un siti
 nuevo **no toca el puerto 80 ni el contenedor de otro sitio**: usa un puerto
 libre en loopback y se agrega al túnel de Cloudflare.
 
-## 1. Construir y levantar el contenedor
+## 1. Publicar
+
+El servidor es un NUC modesto: `docker build` se queda colgado en el paso de
+`vite build` (transforma los módulos y no termina). Lo que funciona es compilar
+en la máquina de desarrollo y montar el `dist` ya construido:
 
 ```bash
-ssh atopnuc@192.168.1.100
-git clone https://github.com/jdsalasca/open-reader.git ~/sitios/open-reader
-cd ~/sitios/open-reader
-docker build -t open-reader .
-docker run -d --name open-reader --restart unless-stopped \
-  -p 127.0.0.1:5177:80 open-reader
-curl -I http://127.0.0.1:5177
+npm run build
+scp -r dist atopnuc@192.168.1.100:/home/atopnuc/sitios/open-reader/
+ssh atopnuc@192.168.1.100 'chmod -R a+rX ~/sitios/open-reader/dist'
 ```
 
-El puerto `5177` estaba libre según el runbook del servidor. Si ya se ocupó, elige
-otro y ajusta el ingress.
+`chmod` es obligatorio: `scp` crea el directorio con permisos `700` y nginx
+(que corre como otro usuario) devuelve 403.
+
+El contenedor ya está creado y sirve ese directorio por bind mount:
+
+```bash
+sudo docker run -d --name open-reader --restart unless-stopped \
+  -p 127.0.0.1:5177:80 \
+  -v /home/atopnuc/sitios/open-reader/dist:/usr/share/nginx/html:ro \
+  -v /home/atopnuc/sitios/open-reader/deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+  nginx:1.27-alpine
+```
+
+Para actualizar basta repetir el `scp` y el `chmod`; nginx sirve los archivos
+nuevos sin reiniciar (los nombres llevan hash).
 
 ## 2. Ingress del túnel
 
-Edita `/home/atopnuc/.cloudflared/config.yml` y agrega, **antes** de
-`http_status: 404`:
-
-```yaml
-  - hostname: open-library.eridu.top
-    service: http://localhost:5177
-```
-
-Valida antes de reiniciar:
+Ya está puesto (regla #5) con `deploy/add-ingress.py`, que hace copia de
+seguridad, es idempotente y se niega a tocar el archivo si no encuentra la regla
+final `http_status:404`. Si hay que rehacerlo:
 
 ```bash
+python3 deploy/add-ingress.py
 cloudflared tunnel ingress validate
 cloudflared tunnel ingress rule https://open-library.eridu.top
 sudo systemctl restart cloudflared
@@ -53,13 +61,14 @@ Debe responder `200` y traer la cabecera `content-security-policy` del
 `deploy/nginx.conf`. Sin esa cabecera el lector no debe considerarse terminado:
 un EPUB con scripts podría ejecutar código en el origen del sitio.
 
+La CSP permite `static.cloudflareinsights.com` en `script-src` porque Cloudflare
+inyecta su beacon en el HTML proxificado; `connect-src` sigue en `'self'`, así
+que la app no puede enviar nada afuera.
+
 ## Actualizar
 
 ```bash
-cd ~/sitios/open-reader
-git pull
-docker build -t open-reader .
-docker rm -f open-reader
-docker run -d --name open-reader --restart unless-stopped \
-  -p 127.0.0.1:5177:80 open-reader
+npm run build
+scp -r dist atopnuc@192.168.1.100:/home/atopnuc/sitios/open-reader/
+ssh atopnuc@192.168.1.100 'chmod -R a+rX ~/sitios/open-reader/dist'
 ```
