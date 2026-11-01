@@ -1,4 +1,4 @@
-# Publicar en `open-library.eridu.top`
+# Publicar en `open-reader.eridu.top`
 
 Pasos para el servidor `atopnuc` (ver `server/README.md` del workspace). Un sitio
 nuevo **no toca el puerto 80 ni el contenedor de otro sitio**: usa un puerto
@@ -41,20 +41,20 @@ final `http_status:404`. Si hay que rehacerlo:
 ```bash
 python3 deploy/add-ingress.py
 cloudflared tunnel ingress validate
-cloudflared tunnel ingress rule https://open-library.eridu.top
+cloudflared tunnel ingress rule https://open-reader.eridu.top
 sudo systemctl restart cloudflared
 ```
 
 ## 3. DNS (una sola vez)
 
 ```bash
-cloudflared tunnel route dns 04706903-924c-4364-b06e-aec258973960 open-library.eridu.top
+cloudflared tunnel route dns 04706903-924c-4364-b06e-aec258973960 open-reader.eridu.top
 ```
 
 ## 4. Comprobar
 
 ```bash
-curl -sI https://open-library.eridu.top | head -12
+curl -sI https://open-reader.eridu.top | head -12
 ```
 
 Debe responder `200` y traer la cabecera `content-security-policy` del

@@ -9,7 +9,7 @@ import sys
 import time
 
 CONFIG = "/home/atopnuc/.cloudflared/config.yml"
-HOST = "open-library.eridu.top"
+HOST = "open-reader.eridu.top"
 SERVICE = "http://localhost:5177"
 CATCH_ALL = "  - service: http_status:404"
 

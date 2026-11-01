@@ -134,7 +134,7 @@ export async function drawQuoteCard(
   ctx.font = '13px "IBM Plex Mono", monospace'
   ctx.textAlign = 'right'
   ctx.fillText('OPEN READER', W - 92, 690)
-  ctx.fillText('open-library.eridu.top', W - 92, 712)
+  ctx.fillText('open-reader.eridu.top', W - 92, 712)
   ctx.textAlign = 'left'
 
   ctx.fillStyle = accent

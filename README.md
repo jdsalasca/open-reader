@@ -5,7 +5,7 @@ AZW3, FB2, CBZ o PDF**—, resalta en cinco colores, subraya, tacha, deja notas 
 margen, marca páginas, busca dentro del libro y guarda citas. El archivo nunca
 sale de tu equipo: no hay cuentas, no hay servidor y no hay subida.
 
-**En vivo:** https://open-library.eridu.top · **Escritorio:** `release/OpenReader.exe`
+**En vivo:** https://open-reader.eridu.top · **Escritorio:** `release/OpenReader.exe`
 
 [![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/jdsalasca)
 
@@ -111,7 +111,7 @@ usar el `.exe` no hace falta nada.
 
 El resultado es estático: sirve `dist/` con cualquier servidor. En `deploy/` hay
 configuración para nginx, Caddy y Docker; el despliegue concreto en
-`open-library.eridu.top` está en [`deploy/eridu.md`](deploy/eridu.md).
+`open-reader.eridu.top` está en [`deploy/eridu.md`](deploy/eridu.md).
 
 ```bash
 docker build -t open-reader .

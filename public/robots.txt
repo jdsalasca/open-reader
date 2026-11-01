@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://open-library.eridu.top/sitemap.xml
+Sitemap: https://open-reader.eridu.top/sitemap.xml

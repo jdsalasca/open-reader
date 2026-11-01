@@ -104,7 +104,7 @@ export default function ShelfScreen({
           </span>
         </div>
         <div className="shelf__bar-right" ref={gear}>
-          <span className="stamp">open-library.eridu.top</span>
+          <span className="stamp">open-reader.eridu.top</span>
           <button
             className="icon-btn"
             type="button"
