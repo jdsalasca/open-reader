@@ -175,5 +175,9 @@ export const en: Record<MessageKey, string> = {
   'settings.storageOf': "{used} of {quota}",
   'settings.storageHint': "Your notes and opened books live here, in this browser. There is no server.",
   'error.reload': 'Reload',
+  'shelf.install': "Save offline",
+  'shelf.installHint': "In Chrome: ⋮ menu → “Install Open Reader”. On iPhone: Share → “Add to Home Screen”.",
+  'margin.collapse': "Hide notes",
+  'margin.expand': "Show notes",
 }
 

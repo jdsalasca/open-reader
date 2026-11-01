@@ -410,6 +410,36 @@ export function useFoliate(options: FoliateOptions) {
     viewRef.current?.clearSearch()
   }, [])
 
+  /** Y position (viewport px) of every mark in the current section. */
+  const markAnchors = useCallback((): Record<string, number> => {
+    const view = viewRef.current
+    if (!view?.renderer?.getContents) return {}
+    const out: Record<string, number> = {}
+    let contents: { doc: Document; index: number }[] = []
+    try {
+      contents = view.renderer.getContents()
+    } catch {
+      return out
+    }
+    for (const content of contents) {
+      for (const mark of annotationsRef.current) {
+        if (mark.kind !== 'highlight' || mark.index !== content.index) continue
+        try {
+          const resolved = view.resolveNavigation(mark.cfi)
+          if (!resolved) continue
+          const anchor = resolved.anchor(content.doc)
+          const rect = (anchor as Range)?.getBoundingClientRect?.()
+          if (!rect) continue
+          const frame = content.doc.defaultView?.frameElement as HTMLElement | null
+          out[mark.id] = (frame?.getBoundingClientRect().top ?? 0) + rect.top
+        } catch {
+          /* mark not in this section */
+        }
+      }
+    }
+    return out
+  }, [])
+
   return {
     containerRef,
     goTo,
@@ -424,6 +454,7 @@ export function useFoliate(options: FoliateOptions) {
     redraw,
     search,
     clearSearch,
+    markAnchors,
   }
 }
 

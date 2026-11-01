@@ -175,6 +175,10 @@ export const es = {
   'settings.storageOf': "{used} de {quota}",
   'settings.storageHint': "Tus notas y los libros abiertos viven aquí, en este navegador. No hay servidor.",
   'error.reload': 'Recargar',
+  'shelf.install': "Guardar offline",
+  'shelf.installHint': "En Chrome: menú ⋮ → «Instalar Open Reader». En iPhone: Compartir → «Añadir a pantalla de inicio».",
+  'margin.collapse': "Ocultar notas",
+  'margin.expand': "Mostrar notas",
 } as const
 
 export type MessageKey = keyof typeof es

@@ -42,6 +42,9 @@ export interface FoliateView extends HTMLElement {
   goLeft: () => Promise<void>
   goRight: () => Promise<void>
   getCFI: (index: number, range: Range | null) => string
+  resolveNavigation: (
+    target: string | number,
+  ) => { index: number; anchor: (doc: Document) => Range | Element | null } | undefined
   addAnnotation: (annotation: Annotation & { value: string }) => Promise<unknown>
   deleteAnnotation: (annotation: { value: string }) => Promise<unknown>
   deselect: () => void

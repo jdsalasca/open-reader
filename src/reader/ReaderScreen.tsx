@@ -128,6 +128,8 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
   )
   const [toast, setToast] = useState<string | null>(null)
   const [isFull, setIsFull] = useState(false)
+  const [marginCollapsed, setMarginCollapsed] = useState(false)
+  const [anchors, setAnchors] = useState<Record<string, number>>({})
   const [scrub, setScrub] = useState<number | null>(null)
   const keyHandler = useRef<(event: KeyboardEvent) => void>(() => undefined)
 
@@ -484,6 +486,16 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
   }, [])
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setAnchors(foliate.markAnchors()), 120)
+    return () => window.clearTimeout(timer)
+  }, [location?.cfi, annotations, foliate])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setAnchors(foliate.markAnchors()), 120)
+    return () => window.clearTimeout(timer)
+  }, [location?.cfi, annotations, foliate])
+
+  useEffect(() => {
     if (!info) return
     document.title = `${info.title} · Open Reader`
     return () => {
@@ -665,6 +677,9 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
           {settings.marginNotes && (
             <MarginNotes
               annotations={annotations.filter((item) => item.index === location?.index)}
+              anchors={anchors}
+              collapsed={marginCollapsed}
+              onToggle={() => setMarginCollapsed((value) => !value)}
               chapter={location?.chapter ?? ''}
               onOpen={(annotation) => {
                 void foliate.goTo(annotation.cfi)

@@ -171,5 +171,9 @@ export const zh: Record<MessageKey, string> = {
   'settings.storageOf': "{used} / {quota}",
   'settings.storageHint': "你的笔记和打开过的书籍保存在此浏览器中，而不是服务器。",
   'error.reload': '刷新',
+  'shelf.install': "离线保存",
+  'shelf.installHint': "Chrome：菜单 ⋮ →「安装 Open Reader」。iPhone：分享 →「添加到主屏幕」。",
+  'margin.collapse': "隐藏笔记",
+  'margin.expand': "显示笔记",
 }
 

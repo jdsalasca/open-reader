@@ -7,6 +7,7 @@ import { LOCALES, LOCALE_LABEL, useI18n } from '../i18n'
 import type { MessageKey } from '../i18n/es'
 import type { LibraryEntry, Settings } from '../lib/types'
 import { Icon } from '../components/Icons'
+import InstallButton from '../components/InstallButton'
 
 interface Props {
   library: LibraryEntry[]
@@ -105,6 +106,7 @@ export default function ShelfScreen({
         </div>
         <div className="shelf__bar-right" ref={gear}>
           <span className="stamp">open-reader.eridu.top</span>
+          <InstallButton />
           <button
             className="icon-btn"
             type="button"

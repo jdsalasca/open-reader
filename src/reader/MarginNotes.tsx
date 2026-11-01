@@ -1,32 +1,102 @@
+import { useLayoutEffect, useRef, useState } from 'react'
 import { HIGHLIGHT_COLORS } from '../lib/reading'
-import { useI18n } from '../i18n'
 import { relativeTime } from '../lib/format'
+import { useI18n } from '../i18n'
 import { Icon } from '../components/Icons'
 import type { Annotation } from '../lib/types'
 
 interface Props {
   annotations: Annotation[]
+  anchors: Record<string, number>
+  collapsed: boolean
   chapter: string
+  onToggle: () => void
   onOpen: (annotation: Annotation) => void
   onLike: (annotation: Annotation) => void
   onDelete: (id: string) => void
 }
 
 /**
- * Notes as margin comments: one card per mark of the section being read,
- * next to the page instead of inside it.
+ * Notes as margin comments. Expanded: paper slips. Collapsed: bubbles pinned
+ * to the height of their highlight, like Google Docs.
  */
-export default function MarginNotes({ annotations, chapter, onOpen, onLike, onDelete }: Props) {
+export default function MarginNotes({
+  annotations,
+  anchors,
+  collapsed,
+  chapter,
+  onToggle,
+  onOpen,
+  onLike,
+  onDelete,
+}: Props) {
   const { t, locale } = useI18n()
+  const box = useRef<HTMLElement | null>(null)
+  const [tops, setTops] = useState<Record<string, number>>({})
+
   const notes = annotations
     .filter((item) => item.kind === 'highlight')
     .sort((a, b) => a.createdAt - b.createdAt)
 
+  useLayoutEffect(() => {
+    if (!collapsed) return
+    const element = box.current
+    if (!element) return
+    const base = element.getBoundingClientRect().top
+    const height = element.clientHeight
+    const next: Record<string, number> = {}
+    for (const note of notes) {
+      const absolute = anchors[note.id]
+      next[note.id] = absolute === undefined ? 0 : Math.min(Math.max(8, absolute - base), height - 34)
+    }
+    setTops(next)
+  }, [collapsed, anchors, notes.length])
+
+  if (collapsed) {
+    return (
+      <aside className="gutter gutter--mini" ref={box} aria-label={t('margin.title')}>
+        <button
+          className="gutter__toggle"
+          type="button"
+          onClick={onToggle}
+          title={t('margin.expand')}
+          aria-label={t('margin.expand')}
+        >
+          <Icon name="note" size={14} />
+        </button>
+        {notes.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`bubble${item.note ? ' bubble--full' : ''}`}
+            style={{
+              top: tops[item.id] ?? 0,
+              borderColor: HIGHLIGHT_COLORS[item.color].hex,
+            }}
+            title={item.note || item.text}
+            onClick={() => onOpen(item)}
+          >
+            <Icon name="note" size={12} />
+          </button>
+        ))}
+      </aside>
+    )
+  }
+
   return (
-    <aside className="gutter" aria-label="Notas al margen">
+    <aside className="gutter" aria-label={t('margin.title')}>
       <header className="gutter__head">
         <span className="gutter__kicker">{t('margin.title')}</span>
         <span className="gutter__count">{notes.length || '—'}</span>
+        <button
+          className="gutter__toggle"
+          type="button"
+          onClick={onToggle}
+          title={t('margin.collapse')}
+          aria-label={t('margin.collapse')}
+        >
+          <Icon name="chevron-right" size={14} />
+        </button>
       </header>
 
       {notes.length === 0 ? (
@@ -41,10 +111,7 @@ export default function MarginNotes({ annotations, chapter, onOpen, onLike, onDe
       ) : (
         <ul className="gutter__list">
           {notes.map((item) => (
-            <li
-              key={item.id}
-              className={`note-card${item.note ? ' note-card--full' : ''}`}
-            >
+            <li key={item.id} className="note-card">
               <span
                 className="note-card__bar"
                 style={{ background: HIGHLIGHT_COLORS[item.color].hex }}
