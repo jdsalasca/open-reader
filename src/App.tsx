@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import ReaderScreen from './reader/ReaderScreen'
 import ShelfScreen from './shelf/ShelfScreen'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { fileId } from './lib/book'
 import {
   exportBackup,
@@ -12,6 +13,8 @@ import {
   saveSettings,
 } from './lib/storage'
 import { downloadText } from './lib/format'
+import { I18nProvider, resolveLocale, translate } from './i18n'
+import type { MessageKey } from './i18n/es'
 import type { BookRecord, LibraryEntry, Settings } from './lib/types'
 
 interface Session {
@@ -24,7 +27,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [library, setLibrary] = useState<LibraryEntry[]>(() => listLibrary())
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<MessageKey | null>(null)
 
   useEffect(() => {
     const root = document.documentElement
@@ -46,7 +49,7 @@ export default function App() {
       const id = await fileId(file)
       setSession({ id, file })
     } catch {
-      setError('No se pudo leer el archivo. Intenta de nuevo.')
+      setError('shelf.error.read')
     } finally {
       setBusy(false)
     }
@@ -63,9 +66,9 @@ export default function App() {
     try {
       const count = importBackup(await file.text())
       setLibrary(listLibrary())
-      setError(count ? null : 'Ese archivo no tiene notas de Open Reader.')
+      setError(count ? null : 'shelf.error.empty')
     } catch {
-      setError('El archivo de notas está dañado o no es un respaldo de Open Reader.')
+      setError('shelf.error.import')
     }
   }, [])
 
@@ -74,48 +77,44 @@ export default function App() {
     setLibrary(listLibrary())
   }, [])
 
-  const content = useMemo(() => {
-    if (session) {
-      return (
-        <ReaderScreen
-          key={session.id}
-          file={session.file}
-          bookId={session.id}
-          settings={settings}
-          patchSettings={patchSettings}
-          onExit={() => {
-            setSession(null)
-            setLibrary(listLibrary())
-          }}
-        />
-      )
-    }
-    return (
-      <ShelfScreen
-        library={library}
-        settings={settings}
-        patchSettings={patchSettings}
-        busy={busy}
-        error={error}
-        onDismissError={() => setError(null)}
-        onOpen={openFile}
-        onExportAll={exportAll}
-        onImport={importAll}
-        onForget={forget}
-      />
-    )
-  }, [
-    session,
-    settings,
-    patchSettings,
-    library,
-    busy,
-    error,
-    openFile,
-    exportAll,
-    importAll,
-    forget,
-  ])
+  const t = useMemo(() => {
+    const locale = resolveLocale(settings.language)
+    return (key: MessageKey, vars?: Record<string, string | number>) =>
+      translate(locale, key, vars)
+  }, [settings.language])
 
-  return <div className="app">{content}</div>
+  return (
+    <I18nProvider setting={settings.language}>
+      <div className="app">
+        <ErrorBoundary>
+          {session ? (
+            <ReaderScreen
+              key={session.id}
+              file={session.file}
+              bookId={session.id}
+              settings={settings}
+              patchSettings={patchSettings}
+              onExit={() => {
+                setSession(null)
+                setLibrary(listLibrary())
+              }}
+            />
+          ) : (
+            <ShelfScreen
+              library={library}
+              settings={settings}
+              patchSettings={patchSettings}
+              busy={busy}
+              error={error ? t(error) : null}
+              onDismissError={() => setError(null)}
+              onOpen={openFile}
+              onExportAll={exportAll}
+              onImport={importAll}
+              onForget={forget}
+            />
+          )}
+        </ErrorBoundary>
+      </div>
+    </I18nProvider>
+  )
 }

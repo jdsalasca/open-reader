@@ -1,7 +1,8 @@
 import { useRef } from 'react'
 import type { BookInfo } from './useFoliate'
-import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS, HIGHLIGHT_STYLES } from '../lib/reading'
+import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS } from '../lib/reading'
 import { percent, relativeTime } from '../lib/format'
+import { useI18n } from '../i18n'
 import { Icon } from '../components/Icons'
 import type { Annotation, LocationInfo, Settings, TocItem } from '../lib/types'
 
@@ -186,6 +187,7 @@ export default function Sidebar({
   onClear,
   onClose,
 }: Props) {
+  const { t, locale } = useI18n()
   const backup = useRef<HTMLInputElement | null>(null)
   const query = useRef<HTMLInputElement | null>(null)
   const notes = annotations.filter((item) => item.kind === 'highlight')
@@ -196,9 +198,9 @@ export default function Sidebar({
     <aside className="rail" aria-label="Panel del libro">
       <div className="rail__head">
         <span className="rail__kicker">
-          {info?.fixedLayout ? 'Página fija' : 'Flujo de texto'}
+          {info?.fixedLayout ? t('rail.fixed') : t('rail.flow')}
         </span>
-        <button className="icon-btn icon-btn--ghost rail__close" type="button" onClick={onClose}>
+        <button className="icon-btn icon-btn--ghost rail__close" type="button" onClick={onClose} title={t('rail.close')}>
           <Icon name="x" size={16} />
         </button>
       </div>
@@ -206,12 +208,12 @@ export default function Sidebar({
       <nav className="rail__tabs" role="tablist">
         {(
           [
-            ['toc', 'Índice'],
-            ['search', 'Buscar'],
-            ['notes', 'Notas'],
-            ['marks', 'Marcas'],
-            ['settings', 'Ajustes'],
-          ] as const
+            ['toc', t('tab.toc')],
+            ['search', t('tab.search')],
+            ['notes', t('tab.notes')],
+            ['marks', t('tab.marks')],
+            ['settings', t('tab.settings')],
+          ] as [PanelTab, string][]
         ).map(([key, label]) => (
           <button
             key={key}
@@ -241,7 +243,7 @@ export default function Sidebar({
                 onGoTo={onGoTo}
               />
             ) : (
-              <p className="empty">Este libro no trae índice. Usa la barra de progreso.</p>
+              <p className="empty">{t('toc.empty')}</p>
             )}
           </div>
         )}
@@ -258,21 +260,18 @@ export default function Sidebar({
               <input
                 ref={query}
                 type="search"
-                placeholder="Buscar en el libro…"
+                placeholder={t('search.placeholder')}
                 defaultValue={search.query}
                 autoFocus
-                aria-label="Buscar en el libro"
+                aria-label={t('search.placeholder')}
               />
               <button className="btn btn--ghost" type="submit" disabled={search.running}>
-                {search.running ? '…' : 'Ir'}
+                {search.running ? '…' : t('search.go')}
               </button>
             </form>
 
             {info?.fixedLayout && (
-              <p className="empty">
-                La búsqueda no está disponible en PDF: el archivo no expone el texto por
-                capítulos.
-              </p>
+              <p className="empty">{t('search.unavailable')}</p>
             )}
 
             {search.running && (
@@ -282,24 +281,25 @@ export default function Sidebar({
             )}
 
             {!search.running && search.query && !search.results.length && !info?.fixedLayout && (
-              <p className="empty">Sin coincidencias para «{search.query}».</p>
+              <p className="empty">{t('search.none', { q: search.query })}</p>
             )}
 
             {search.results.length > 0 && (
               <div className="search__meta">
                 <span>
-                  {search.results.reduce((total, group) => total + group.items.length, 0)}{' '}
-                  coincidencias
+                  {t('search.matches', {
+                    n: search.results.reduce((total, group) => total + group.items.length, 0),
+                  })}
                 </span>
                 <button type="button" className="search__clear" onClick={onClearSearch}>
-                  Limpiar
+                  {t('search.clear')}
                 </button>
               </div>
             )}
 
             {search.results.map((group) => (
               <section key={group.label + group.items[0]?.cfi} className="search__group">
-                <h3>{group.label || 'Sin capítulo'}</h3>
+                <h3>{group.label || t('search.noChapter')}</h3>
                 <ul>
                   {group.items.map((item) => (
                     <li key={item.cfi}>
@@ -319,10 +319,7 @@ export default function Sidebar({
         {tab === 'notes' && (
           <div className="panel">
             {notes.length === 0 ? (
-              <p className="empty">
-                Selecciona un fragmento en el libro para resaltarlo. Aquí aparecerán tus
-                anotaciones.
-              </p>
+              <p className="empty">{t('notes.empty')}</p>
             ) : (
               <ul className="marks">
                 {notes.map((item) => (
@@ -340,8 +337,8 @@ export default function Sidebar({
                         <q>{item.text}</q>
                         {item.note && <span className="mark__note">{item.note}</span>}
                         <span className="mark__meta">
-                          {item.quoted && <b className="mark__star">★ cita</b>}
-                          {item.chapter || 'Sin capítulo'} · {relativeTime(item.createdAt)}
+                          {item.quoted && <b className="mark__star">★ {t('quote.title')}</b>}
+                          {item.chapter || t('search.noChapter')} · {relativeTime(item.createdAt, locale)}
                         </span>
                       </span>
                     </button>
@@ -349,7 +346,7 @@ export default function Sidebar({
                       <button
                         className={`icon-btn icon-btn--ghost${item.quoted ? ' is-liked' : ''}`}
                         type="button"
-                        title="Citar"
+                        title={t('notes.quote')}
                         onClick={() => onQuote(item)}
                       >
                         <Icon name="quote" size={15} />
@@ -357,7 +354,7 @@ export default function Sidebar({
                       <button
                         className={`icon-btn icon-btn--ghost${item.liked ? ' is-liked' : ''}`}
                         type="button"
-                        title={item.liked ? 'Quitar me gusta' : 'Me gusta'}
+                        title={item.liked ? t('notes.unlike') : t('notes.like')}
                         aria-pressed={Boolean(item.liked)}
                         onClick={() => onLike(item)}
                       >
@@ -366,7 +363,7 @@ export default function Sidebar({
                       <button
                         className="icon-btn icon-btn--ghost"
                         type="button"
-                        title="Editar nota"
+                        title={t('notes.edit')}
                         onClick={() => onEditNote(item)}
                       >
                         <Icon name="pencil" size={15} />
@@ -374,7 +371,7 @@ export default function Sidebar({
                       <button
                         className="icon-btn icon-btn--ghost"
                         type="button"
-                        title="Eliminar"
+                        title={t('notes.delete')}
                         onClick={() => onDelete(item.id)}
                       >
                         <Icon name="trash" size={15} />
@@ -385,7 +382,7 @@ export default function Sidebar({
               </ul>
             )}
             {quotes.length > 0 && (
-              <p className="panel__foot">{quotes.length} en citas</p>
+              <p className="panel__foot">{t('notes.inQuotes', { n: quotes.length })}</p>
             )}
           </div>
         )}
@@ -393,9 +390,7 @@ export default function Sidebar({
         {tab === 'marks' && (
           <div className="panel">
             {bookmarks.length === 0 ? (
-              <p className="empty">
-                Marca la página actual con el botón de marcador o la tecla <kbd>b</kbd>.
-              </p>
+              <p className="empty">{t('marks.empty')}</p>
             ) : (
               <ul className="marks">
                 {bookmarks.map((item) => (
@@ -407,9 +402,9 @@ export default function Sidebar({
                     >
                       <Icon name="bookmark-filled" size={16} />
                       <span className="mark__text">
-                        <span className="mark__title">{item.text || 'Marcador'}</span>
+                        <span className="mark__title">{item.text || t('tab.marks')}</span>
                         <span className="mark__meta">
-                          {item.chapter || 'Sin capítulo'} · {relativeTime(item.createdAt)}
+                          {item.chapter || t('search.noChapter')} · {relativeTime(item.createdAt, locale)}
                         </span>
                       </span>
                     </button>
@@ -417,7 +412,7 @@ export default function Sidebar({
                       <button
                         className="icon-btn icon-btn--ghost"
                         type="button"
-                        title="Eliminar"
+                        title={t('notes.delete')}
                         onClick={() => onDelete(item.id)}
                       >
                         <Icon name="trash" size={15} />
@@ -433,34 +428,45 @@ export default function Sidebar({
         {tab === 'settings' && (
           <div className="panel">
             <section className="panel__group">
-              <h3>Presentación</h3>
+              <h3>{t('settings.presentation')}</h3>
               <Segmented
-                label="Tema"
+                label={t('settings.language')}
+                value={settings.language}
+                options={[
+                  { value: 'auto', label: 'Auto' },
+                  { value: 'es', label: 'ES' },
+                  { value: 'en', label: 'EN' },
+                  { value: 'zh', label: '中文' },
+                ]}
+                onChange={(language) => patchSettings({ language })}
+              />
+              <Segmented
+                label={t('settings.theme')}
                 value={settings.theme}
                 options={[
-                  { value: 'light', label: 'Papel' },
-                  { value: 'dark', label: 'Grafito' },
+                  { value: 'light', label: t('theme.light') },
+                  { value: 'dark', label: t('theme.dark') },
                 ]}
                 onChange={(theme) => patchSettings({ theme })}
               />
               {!info?.fixedLayout && (
                 <Segmented
-                  label="Disposición"
+                  label={t('settings.layout')}
                   value={settings.flow}
                   options={[
-                    { value: 'paginated', label: 'Páginas' },
-                    { value: 'scrolled', label: 'Scroll' },
+                    { value: 'paginated', label: t('settings.pages') },
+                    { value: 'scrolled', label: t('settings.scroll') },
                   ]}
                   onChange={(flow) => patchSettings({ flow })}
                 />
               )}
               {info?.fixedLayout && (
                 <Segmented
-                  label="Zoom"
+                  label={t('settings.zoom')}
                   value={settings.zoom}
                   options={[
-                    { value: 'fit-page', label: 'Página' },
-                    { value: 'fit-width', label: 'Ancho' },
+                    { value: 'fit-page', label: t('settings.fitPage') },
+                    { value: 'fit-width', label: t('settings.fitWidth') },
                   ]}
                   onChange={(zoom) => patchSettings({ zoom })}
                 />
@@ -468,19 +474,19 @@ export default function Sidebar({
             </section>
 
             <section className="panel__group">
-              <h3>Lectura</h3>
+              <h3>{t('settings.reading')}</h3>
               <Segmented
-                label="Tipografía"
+                label={t('settings.type')}
                 value={settings.readingFont}
                 options={[
-                  { value: 'book', label: 'Del libro' },
-                  { value: 'serif', label: 'Serif' },
-                  { value: 'sans', label: 'Sans' },
+                  { value: 'book', label: t('settings.typeBook') },
+                  { value: 'serif', label: t('settings.typeSerif') },
+                  { value: 'sans', label: t('settings.typeSans') },
                 ]}
                 onChange={(readingFont) => patchSettings({ readingFont })}
               />
               <Slider
-                label="Tamaño"
+                label={t('settings.size')}
                 value={settings.fontSize}
                 min={85}
                 max={150}
@@ -488,7 +494,7 @@ export default function Sidebar({
                 onChange={(fontSize) => patchSettings({ fontSize })}
               />
               <Slider
-                label="Interlineado"
+                label={t('settings.lineHeight')}
                 value={settings.lineHeight}
                 min={1.2}
                 max={2}
@@ -498,7 +504,7 @@ export default function Sidebar({
               />
               {!info?.fixedLayout && (
                 <Slider
-                  label="Ancho de columna"
+                  label={t('settings.column')}
                   value={settings.columnWidth}
                   min={440}
                   max={900}
@@ -508,54 +514,47 @@ export default function Sidebar({
                 />
               )}
               <Toggle
-                label="Justificar texto"
+                label={t('settings.justify')}
                 checked={settings.justify}
                 onChange={(justify) => patchSettings({ justify })}
               />
               <Toggle
-                label="Partir palabras"
+                label={t('settings.hyphens')}
                 checked={settings.hyphens}
                 onChange={(hyphens) => patchSettings({ hyphens })}
               />
             </section>
 
             <section className="panel__group">
-              <h3>Anotaciones</h3>
+              <h3>{t('settings.annotations')}</h3>
               <Toggle
-                label="Notas al margen"
+                label={t('settings.margin')}
                 checked={settings.marginNotes}
                 onChange={(marginNotes) => patchSettings({ marginNotes })}
               />
-              <p className="panel__hint">
-                Muestra tus notas al lado de la página. Apágalo para una lectura
-                sin interrupciones; las notas siguen guardadas en la pestaña
-                «Notas».
-              </p>
+              <p className="panel__hint">{t('settings.marginHint')}</p>
             </section>
 
             <section className="panel__group">
-              <h3>Leyenda de colores</h3>
+              <h3>{t('settings.legend')}</h3>
               <ul className="legend">
                 {COLOR_KEYS.map((key) => (
                   <li key={key}>
                     <span style={{ background: HIGHLIGHT_COLORS[key].hex }} />
-                    {HIGHLIGHT_COLORS[key].label}
+                    {t(`color.${key}` as never)}
                   </li>
                 ))}
               </ul>
               <ul className="legend legend--styles">
                 {STYLE_KEYS.map((key) => (
-                  <li key={key}>{HIGHLIGHT_STYLES[key]}</li>
+                  <li key={key}>{t(`style.${key}` as never)}</li>
                 ))}
               </ul>
             </section>
 
             <section className="panel__group">
-              <h3>Datos</h3>
-              <p className="panel__hint">
-                Las notas viven en este navegador. Exporta un respaldo antes de limpiar
-                datos del sitio.
-              </p>
+              <h3>{t('settings.data')}</h3>
+              <p className="panel__hint">{t('settings.dataHint')}</p>
               <div className="panel__actions">
                 <button className="btn btn--ghost" type="button" onClick={onExport}>
                   <Icon name="download" size={15} /> .eridu
@@ -565,14 +564,14 @@ export default function Sidebar({
                   type="button"
                   onClick={() => backup.current?.click()}
                 >
-                  <Icon name="upload" size={15} /> Importar
+                  <Icon name="upload" size={15} /> {t('settings.import')}
                 </button>
               </div>
               <button className="btn btn--ghost" type="button" onClick={onExportMarkdown}>
-                <Icon name="note" size={15} /> Exportar Markdown
+                <Icon name="note" size={15} /> {t('settings.markdown')}
               </button>
               <button className="btn btn--danger" type="button" onClick={onClear}>
-                <Icon name="trash" size={15} /> Borrar notas del libro
+                <Icon name="trash" size={15} /> {t('settings.clear')}
               </button>
               <input
                 ref={backup}
@@ -588,12 +587,23 @@ export default function Sidebar({
             </section>
 
             <p className="panel__foot">
-              {percent(location?.fraction ?? 0)} leído
-              {location?.page ? ` · página ${location.page}` : ''}
+              {t('settings.read', { p: percent(location?.fraction ?? 0) })}
+              {location?.page ? ` · ${t('settings.page', { n: location.page })}` : ''}
             </p>
           </div>
         )}
       </div>
+
+      <button
+        className="rail__collapse"
+        type="button"
+        onClick={onClose}
+        title={t('rail.collapse')}
+        aria-label={t('rail.collapse')}
+      >
+        <Icon name="chevron-left" size={14} />
+      </button>
     </aside>
   )
 }
+

@@ -2,6 +2,8 @@ export type ThemeMode = 'light' | 'dark'
 export type Flow = 'paginated' | 'scrolled'
 export type ReadingFont = 'book' | 'serif' | 'sans'
 export type Zoom = 'fit-page' | 'fit-width'
+export type Locale = 'es' | 'en' | 'zh'
+export type LanguageSetting = Locale | 'auto'
 
 export type HighlightColor = 'amber' | 'rust' | 'sage' | 'sky' | 'iris'
 export type HighlightStyle = 'highlight' | 'underline' | 'squiggly' | 'strike'
@@ -77,6 +79,10 @@ export interface Settings {
   zoom: Zoom
   /** Notes shown in the right margin, next to the page. */
   marginNotes: boolean
+  /** 'auto' follows the device language. */
+  language: LanguageSetting
+  /** Left rail visible; kept across sessions. */
+  railOpen: boolean
 }
 
 export interface LocationInfo {

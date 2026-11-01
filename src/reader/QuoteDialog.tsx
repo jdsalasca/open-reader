@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { drawQuoteCard, downloadCanvas } from '../lib/quoteCard'
+import { useI18n } from '../i18n'
 import { Icon } from '../components/Icons'
 import type { HighlightColor } from '../lib/types'
 
@@ -24,6 +25,7 @@ export default function QuoteDialog({
   onSave,
   onClose,
 }: Props) {
+  const { t } = useI18n()
   const dialog = useRef<HTMLDialogElement | null>(null)
   const canvas = useRef<HTMLCanvasElement | null>(null)
 
@@ -58,19 +60,19 @@ export default function QuoteDialog({
     >
       <div className="dialog__box">
         <header className="dialog__head">
-          <h2>Cita</h2>
+          <h2>{t('quote.title')}</h2>
           <button className="icon-btn icon-btn--ghost" type="button" onClick={onClose}>
             <Icon name="x" size={16} />
           </button>
         </header>
 
         <div className="quote-preview">
-          <canvas ref={canvas} aria-label="Vista previa de la cita" />
+          <canvas ref={canvas} aria-label={t('quote.preview')} />
         </div>
 
         <footer className="dialog__foot">
           <span className="dialog__hint">
-            {saved ? 'Ya está en tus citas' : 'Se guarda con el libro'}
+            {saved ? t('quote.saved') : t('quote.hint')}
           </span>
           <div className="dialog__actions">
             <button
@@ -78,10 +80,10 @@ export default function QuoteDialog({
               type="button"
               onClick={() => canvas.current && downloadCanvas(canvas.current, fileName)}
             >
-              <Icon name="download" size={15} /> PNG
+              <Icon name="download" size={15} /> {t('quote.download')}
             </button>
             <button className="btn btn--accent" type="button" onClick={onSave}>
-              <Icon name="check" size={15} /> {saved ? 'Guardada' : 'Guardar en citas'}
+              <Icon name="check" size={15} /> {saved ? t('quote.savedButton') : t('quote.save')}
             </button>
           </div>
         </footer>

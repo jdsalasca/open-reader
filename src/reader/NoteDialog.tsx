@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../components/Icons'
+import { useI18n } from '../i18n'
 
 interface Props {
   open: boolean
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function NoteDialog({ open, quote, initial, onSave, onClose }: Props) {
+  const { t } = useI18n()
   const ref = useRef<HTMLDialogElement | null>(null)
   const [text, setText] = useState(initial)
 
@@ -41,7 +43,7 @@ export default function NoteDialog({ open, quote, initial, onSave, onClose }: Pr
         }}
       >
         <header className="dialog__head">
-          <h2>Nota al margen</h2>
+          <h2>{t('note.title')}</h2>
           <button className="icon-btn icon-btn--ghost" type="button" onClick={onClose}>
             <Icon name="x" size={16} />
           </button>
@@ -50,12 +52,12 @@ export default function NoteDialog({ open, quote, initial, onSave, onClose }: Pr
         {quote && <blockquote className="dialog__quote">{quote}</blockquote>}
 
         <label className="dialog__field">
-          <span>Tu nota</span>
+          <span>{t('note.label')}</span>
           <textarea
             value={text}
             autoFocus
             rows={5}
-            placeholder="Qué piensas de este pasaje…"
+            placeholder={t('note.placeholder')}
             onChange={(event) => setText(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
@@ -67,13 +69,13 @@ export default function NoteDialog({ open, quote, initial, onSave, onClose }: Pr
         </label>
 
         <footer className="dialog__foot">
-          <span className="dialog__hint">Ctrl + Enter para guardar</span>
+          <span className="dialog__hint">{t('note.hint')}</span>
           <div className="dialog__actions">
             <button className="btn btn--ghost" type="button" onClick={onClose}>
-              Cancelar
+              {t('note.cancel')}
             </button>
             <button className="btn btn--accent" type="submit">
-              Guardar
+              {t('note.save')}
             </button>
           </div>
         </footer>

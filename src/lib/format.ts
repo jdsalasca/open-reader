@@ -9,18 +9,18 @@ export function percent(fraction: number): string {
   return `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)} %`
 }
 
-export function relativeTime(timestamp: number): string {
-  if (!timestamp) return 'sin abrir'
+export function relativeTime(timestamp: number, locale = 'es'): string {
+  if (!timestamp) return '—'
   const diff = Date.now() - timestamp
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
   const minutes = Math.round(diff / 60_000)
-  if (minutes < 1) return 'ahora'
-  if (minutes < 60) return `hace ${minutes} min`
+  if (minutes < 1) return rtf.format(0, 'minute')
+  if (minutes < 60) return rtf.format(-minutes, 'minute')
   const hours = Math.round(minutes / 60)
-  if (hours < 24) return `hace ${hours} h`
+  if (hours < 24) return rtf.format(-hours, 'hour')
   const days = Math.round(hours / 24)
-  if (days === 1) return 'ayer'
-  if (days < 30) return `hace ${days} días`
-  return new Date(timestamp).toLocaleDateString('es-CO', {
+  if (days < 30) return rtf.format(-days, 'day')
+  return new Date(timestamp).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
   })

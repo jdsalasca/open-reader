@@ -1,0 +1,28 @@
+.crash {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 40px;
+  background: var(--bg);
+  color: var(--ink);
+  text-align: center;
+
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  p {
+    max-width: 46ch;
+    color: var(--ink-2);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+}
+
+.crash__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}

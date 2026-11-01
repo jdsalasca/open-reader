@@ -5,6 +5,7 @@ import NoteDialog from './NoteDialog'
 import QuoteDialog from './QuoteDialog'
 import MarginNotes from './MarginNotes'
 import { useFoliate, type BookInfo, type Rect } from './useFoliate'
+import { useI18n } from '../i18n'
 import {
   exportBackup,
   importBackup,
@@ -66,6 +67,7 @@ export default function ReaderScreen({
   patchSettings,
   onExit,
 }: Props) {
+  const { t } = useI18n()
   const stored = useRef(loadBook(bookId))
   const openedAt = useRef(Date.now())
 
@@ -90,7 +92,14 @@ export default function ReaderScreen({
     results: [],
   })
   const [tab, setTab] = useState<PanelTab>('toc')
-  const [rail, setRail] = useState(() => window.innerWidth > 980)
+  const [rail, setRailState] = useState(() => settings.railOpen && window.innerWidth > 980)
+  const setRail = useCallback(
+    (value: boolean) => {
+      setRailState(value)
+      patchSettings({ railOpen: value })
+    },
+    [patchSettings],
+  )
   const [toast, setToast] = useState<string | null>(null)
   const [isFull, setIsFull] = useState(false)
   const [scrub, setScrub] = useState<number | null>(null)
@@ -158,7 +167,7 @@ export default function ReaderScreen({
     onError: (cause) => {
       console.error(cause)
       setError(
-        'No se pudo abrir el libro. Puede estar protegido con DRM, dañado o en un formato que el motor no entiende.',
+        t('reader.error.body'),
       )
     },
     onReady: () => setReady(true),
@@ -212,7 +221,7 @@ export default function ReaderScreen({
       if (target) foliate.removeAnnotation(target)
       setAnnotations((list) => list.filter((item) => item.id !== id))
       setPopover(null)
-      flash(target?.kind === 'bookmark' ? 'Marcador eliminado' : 'Anotación eliminada')
+      flash(target?.kind === 'bookmark' ? t('reader.toast.unbookmarked') : t('reader.toast.deleted'))
     },
     [annotations, foliate, flash],
   )
@@ -243,7 +252,7 @@ export default function ReaderScreen({
         createdAt: Date.now(),
       },
     ])
-    flash('Página marcada')
+    flash(t('reader.toast.bookmarked'))
   }, [location, annotations, deleteMark, flash])
 
   const applyMark = useCallback(
@@ -344,7 +353,7 @@ export default function ReaderScreen({
         current ? { ...current, saved: true, id: annotation.id } : current,
       )
     }
-    flash('Guardada en citas')
+    flash(t('reader.toast.quoted'))
   }, [quote, updateMark, foliate, flash])
 
   const exportMarkdown = useCallback(() => {
@@ -358,7 +367,7 @@ export default function ReaderScreen({
         .replace(/^-|-$/g, '')
         .slice(0, 48) || 'libro'
     downloadText(`notas-${slug}.md`, bookToMarkdown({ meta, progress, annotations }))
-    flash('Markdown exportado')
+    flash(t('reader.toast.md'))
   }, [meta, progress, annotations, flash])
 
   const toggleFull = useCallback(async () => {
@@ -366,7 +375,7 @@ export default function ReaderScreen({
       if (document.fullscreenElement) await document.exitFullscreen()
       else await document.documentElement.requestFullscreen()
     } catch {
-      flash('El navegador no permitió pantalla completa')
+      flash(t('reader.toast.fullscreenFail'))
     }
   }, [flash])
 
@@ -485,7 +494,7 @@ export default function ReaderScreen({
       `notas-${meta.title.replace(/[^\w\-]+/g, '-').slice(0, 40) || 'libro'}.eridu`,
       exportBackup([{ meta, progress, annotations }]),
     )
-    flash('Notas exportadas')
+    flash(t('reader.toast.exported'))
   }
 
   const importHere = async (picked: File) => {
@@ -493,25 +502,25 @@ export default function ReaderScreen({
       importBackup(await picked.text())
       const reloaded = loadBook(bookId)
       if (reloaded) setAnnotations(reloaded.annotations)
-      flash('Notas importadas')
+      flash(t('reader.toast.imported'))
     } catch {
-      flash('No se pudo importar ese archivo')
+      flash(t('reader.toast.importFail'))
     }
   }
 
   const clearMarks = () => {
-    if (!window.confirm('¿Borrar todas las notas y marcadores de este libro?')) return
+    if (!window.confirm(t('reader.confirm.clear'))) return
     setAnnotations([])
     setProgress(EMPTY_PROGRESS)
     setPopover(null)
-    flash('Notas borradas')
+    flash(t('reader.toast.cleared'))
   }
 
   return (
     <div className={`reader${rail ? ' is-rail-open' : ''}`}>
       <header className="topbar">
         <div className="topbar__left">
-          <button className="icon-btn" type="button" onClick={onExit} title="Volver a la estantería">
+          <button className="icon-btn" type="button" onClick={onExit} title={t('reader.back')}>
             <Icon name="arrow-left" />
           </button>
           <div className="topbar__id">
@@ -524,7 +533,7 @@ export default function ReaderScreen({
         </div>
 
         <div className="topbar__chapter">
-          <span className="topbar__chapter-label">{location?.chapter || 'Portada'}</span>
+          <span className="topbar__chapter-label">{location?.chapter || t('reader.cover')}</span>
         </div>
 
         <div className="topbar__actions">
@@ -532,7 +541,7 @@ export default function ReaderScreen({
             className={`icon-btn${bookmarked ? ' is-active' : ''}`}
             type="button"
             onClick={addBookmark}
-            title="Marcar esta página (b)"
+            title={t('reader.bookmark')}
           >
             <Icon name={bookmarked ? 'bookmark-filled' : 'bookmark'} />
           </button>
@@ -543,27 +552,27 @@ export default function ReaderScreen({
               setTab('notes')
               setRail(true)
             }}
-            title="Notas y resaltados"
+            title={t('reader.notes')}
           >
             <Icon name="highlighter" />
             {marks > 0 && <span className="badge">{marks}</span>}
           </button>
-          <button className="icon-btn" type="button" onClick={toggleTheme} title="Tema (t)">
+          <button className="icon-btn" type="button" onClick={toggleTheme} title={t('reader.theme')}>
             <Icon name={settings.theme === 'dark' ? 'sun' : 'moon'} />
           </button>
           <button
             className="icon-btn"
             type="button"
             onClick={() => void toggleFull()}
-            title="Pantalla completa (f)"
+            title={t('reader.fullscreen')}
           >
             <Icon name={isFull ? 'shrink' : 'expand'} />
           </button>
           <button
             className={`icon-btn${rail ? ' is-active' : ''}`}
             type="button"
-            onClick={() => setRail((value) => !value)}
-            title="Panel lateral"
+            onClick={() => setRail(!rail)}
+            title={t('reader.panel')}
           >
             <Icon name="list" />
           </button>
@@ -613,15 +622,15 @@ export default function ReaderScreen({
             {!ready && !error && (
               <div className="stage__loading">
                 <span className="spinner" aria-hidden="true" />
-                <p>Preparando el libro…</p>
+                <p>{t('reader.loading')}</p>
               </div>
             )}
             {error && (
               <div className="stage__error">
-                <h2>No se pudo abrir</h2>
+                <h2>{t('reader.error.title')}</h2>
                 <p>{error}</p>
                 <button className="btn btn--accent" type="button" onClick={onExit}>
-                  Volver
+                  {t('reader.error.back')}
                 </button>
               </div>
             )}
@@ -645,9 +654,21 @@ export default function ReaderScreen({
           <button
             className="rail-backdrop"
             type="button"
-            aria-label="Cerrar panel"
+            aria-label={t('rail.close')}
             onClick={() => setRail(false)}
           />
+        )}
+
+        {!rail && (
+          <button
+            className="rail__handle"
+            type="button"
+            onClick={() => setRail(true)}
+            title={t('rail.expand')}
+            aria-label={t('rail.expand')}
+          >
+            <Icon name="chevron-right" size={14} />
+          </button>
         )}
       </div>
 
@@ -656,7 +677,7 @@ export default function ReaderScreen({
           className="icon-btn icon-btn--ghost"
           type="button"
           onClick={foliate.prev}
-          title="Página anterior"
+          title={t('reader.prev')}
         >
           <Icon name="chevron-left" />
         </button>
@@ -677,20 +698,20 @@ export default function ReaderScreen({
             void foliate.goToFraction(scrub / 1000)
             setScrub(null)
           }}
-          aria-label="Progreso de lectura"
+          aria-label={t('reader.progress')}
         />
         <button
           className="icon-btn icon-btn--ghost"
           type="button"
           onClick={foliate.next}
-          title="Página siguiente"
+          title={t('reader.next')}
         >
           <Icon name="chevron-right" />
         </button>
         <span className="statusbar__readout">
           <strong>{percent(location?.fraction ?? 0)}</strong>
           <span className="statusbar__sep">/</span>
-          <span>{location?.page ? `pág. ${location.page}` : location?.chapter || 'sin ubicar'}</span>
+          <span>{location?.page ? t('reader.page', { n: location.page }) : location?.chapter || t('reader.nowhere')}</span>
         </span>
       </footer>
 
@@ -734,3 +755,4 @@ export default function ReaderScreen({
     </div>
   )
 }
+

@@ -22,6 +22,8 @@ export const DEFAULT_SETTINGS: Settings = {
   readingFont: 'book',
   zoom: 'fit-page',
   marginNotes: true,
+  language: 'auto',
+  railOpen: true,
 }
 
 export const EMPTY_PROGRESS = { cfi: '', fraction: 0, chapter: '' }

@@ -20,6 +20,9 @@ En vivo: **https://open-library.eridu.top** · Escritorio: `release/OpenReader.e
 - **Citas.** Selecciona un fragmento y guárdalo como cita: sale una tarjeta con
   el texto, el autor y el libro, descargable en PNG. Las citas quedan marcadas
   con ★ y salen aparte en la exportación.
+- **Tres idiomas.** Español, English y 简体中文, con detección automática del
+  idioma del dispositivo. La tuerca de la portada cambia idioma y tema; en el
+  lector está en Ajustes.
 - **Exporta a `.eridu` o Markdown.** El `.eridu` es el respaldo completo (JSON
   con extensión propia); el Markdown deja las notas listas para pegar en un
   trabajo, con cita textual, capítulo y nota.

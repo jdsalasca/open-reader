@@ -1,4 +1,5 @@
 .rail {
+  position: relative;
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
@@ -6,6 +7,51 @@
   min-height: 0;
   border-right: 1px solid var(--rule);
   background: var(--bg-2);
+}
+
+.rail__collapse {
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  z-index: 22;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--bg-2);
+  color: var(--ink-3);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-3);
+    color: var(--ink);
+  }
+}
+
+.rail__handle {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 18;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 54px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-left: 0;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--bg-2);
+  color: var(--ink-3);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-3);
+    color: var(--ink);
+  }
 }
 
 .reader:not(.is-rail-open) .rail {
