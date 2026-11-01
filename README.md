@@ -59,7 +59,8 @@ otra ruta, el identificador sigue coincidiendo.
 ## Despliegue
 
 El resultado es estático: sirve `dist/` con cualquier servidor. En `deploy/`
-hay configuración lista para nginx, Caddy y Docker.
+hay configuración lista para nginx, Caddy y Docker. El despliegue concreto en
+`open-library.eridu.top` está en [`deploy/eridu.md`](deploy/eridu.md).
 
 ```bash
 docker build -t open-reader .
