@@ -1,9 +1,5 @@
-import type {
-  Annotation,
-  BookRecord,
-  LibraryEntry,
-  Settings,
-} from './types'
+import { idbDel, idbGet, idbSet } from './idb'
+import type { Annotation, BookRecord, LibraryEntry, Settings } from './types'
 
 const NS = 'openreader.v1'
 
@@ -59,6 +55,14 @@ function write(key: string, value: unknown): boolean {
   }
 }
 
+const normalize = (record: BookRecord): BookRecord => ({
+  meta: record.meta,
+  progress: { ...EMPTY_PROGRESS, ...record.progress },
+  annotations: Array.isArray(record.annotations) ? record.annotations : [],
+})
+
+/* --- settings and library index (small, stays in localStorage) ------------ */
+
 export function loadSettings(): Settings {
   const saved = read<Partial<Settings>>(SETTINGS_KEY)
   return { ...DEFAULT_SETTINGS, ...(saved ?? {}) }
@@ -66,24 +70,6 @@ export function loadSettings(): Settings {
 
 export function saveSettings(settings: Settings): boolean {
   return write(SETTINGS_KEY, settings)
-}
-
-export function emptyBook(meta: BookRecord['meta']): BookRecord {
-  return { meta, progress: { ...EMPTY_PROGRESS }, annotations: [] }
-}
-
-export function loadBook(id: string): BookRecord | null {
-  const record = read<BookRecord>(bookKey(id))
-  if (!record?.meta?.id) return null
-  return {
-    meta: record.meta,
-    progress: { ...EMPTY_PROGRESS, ...record.progress },
-    annotations: Array.isArray(record.annotations) ? record.annotations : [],
-  }
-}
-
-export function saveBook(record: BookRecord): boolean {
-  return write(bookKey(record.meta.id), record)
 }
 
 export function listLibrary(): LibraryEntry[] {
@@ -106,10 +92,40 @@ export function removeFromLibrary(id: string): void {
   )
 }
 
-export function clearBook(id: string): void {
+/* --- books: IndexedDB, so notes are not capped at 5 MB -------------------- */
+
+export async function loadBook(id: string): Promise<BookRecord | null> {
+  const stored = await idbGet<BookRecord>('books', id).catch(() => undefined)
+  if (stored?.meta?.id) return normalize(stored)
+
+  // one-time migration from the localStorage era
+  const legacy = read<BookRecord>(bookKey(id))
+  if (legacy?.meta?.id) {
+    const record = normalize(legacy)
+    await saveBook(record)
+    storage()?.removeItem(bookKey(id))
+    return record
+  }
+  return null
+}
+
+export async function saveBook(record: BookRecord): Promise<boolean> {
+  try {
+    await idbSet('books', record.meta.id, record)
+    return true
+  } catch (error) {
+    console.warn('[open-reader] no se pudo guardar el libro', error)
+    return false
+  }
+}
+
+export async function clearBook(id: string): Promise<void> {
+  await idbDel('books', id).catch(() => undefined)
   storage()?.removeItem(bookKey(id))
   removeFromLibrary(id)
 }
+
+/* --- backup --------------------------------------------------------------- */
 
 export interface Backup {
   app: 'open-reader'
@@ -133,7 +149,7 @@ export function exportBackup(records: BookRecord[]): string {
 }
 
 /** Accepts a full backup or a single book record. Returns how many were stored. */
-export function importBackup(json: string): number {
+export async function importBackup(json: string): Promise<number> {
   const parsed = JSON.parse(json) as Partial<Backup> | BookRecord
   const books: BookRecord[] =
     'books' in parsed && Array.isArray(parsed.books)
@@ -149,7 +165,7 @@ export function importBackup(json: string): number {
       progress: { ...EMPTY_PROGRESS, ...record.progress },
       annotations: (record.annotations ?? []).filter((a: Annotation) => a?.cfi),
     }
-    if (saveBook(merged)) {
+    if (await saveBook(merged)) {
       touchLibrary({
         id: merged.meta.id,
         title: merged.meta.title,
@@ -162,4 +178,25 @@ export function importBackup(json: string): number {
     }
   }
   return stored
+}
+
+/* --- storage meter -------------------------------------------------------- */
+
+export async function storageEstimate(): Promise<{ used: number; quota: number } | null> {
+  if (!navigator.storage?.estimate) return null
+  try {
+    const { usage, quota } = await navigator.storage.estimate()
+    return { used: usage ?? 0, quota: quota ?? 0 }
+  } catch {
+    return null
+  }
+}
+
+/** Asks the browser not to evict our notes when the disk gets tight. */
+export async function requestPersistence(): Promise<void> {
+  try {
+    await navigator.storage?.persist?.()
+  } catch {
+    /* not supported */
+  }
 }

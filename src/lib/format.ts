@@ -9,6 +9,15 @@ export function percent(fraction: number): string {
   return `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)} %`
 }
 
+export function bytes(value: number): string {
+  if (!value) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  const index = Math.min(units.length - 1, Math.floor(Math.log(value) / Math.log(1024)))
+  const size = value / 1024 ** index
+  const rounded = size >= 10 || index === 0 ? Math.round(size) : Math.round(size * 10) / 10
+  return `${rounded} ${units[index]}`
+}
+
 export function relativeTime(timestamp: number, locale = 'es'): string {
   if (!timestamp) return '—'
   const diff = Date.now() - timestamp

@@ -1,0 +1,179 @@
+// Theme personalities.
+// Paper: laid paper, washi tape, folded corners, a spine shadow.
+// Graphite: brushed metal, rivets, LEDs, hazard stripes.
+
+/* --- paper --------------------------------------------------------------- */
+
+[data-theme='light'] {
+  .shelf {
+    background-image:
+      radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--bg-2) 92%, transparent), transparent 70%),
+      repeating-linear-gradient(0deg, rgba(120, 100, 70, 0.025) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(120, 100, 70, 0.018) 0 1px, transparent 1px 4px),
+      var(--bg);
+  }
+
+  .hero__title {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  // washi tape holding the drop sheet
+  .drop::after {
+    content: '';
+    position: absolute;
+    top: -11px;
+    left: 34px;
+    width: 104px;
+    height: 22px;
+    border-right: 1px dashed rgba(90, 60, 30, 0.18);
+    border-left: 1px dashed rgba(90, 60, 30, 0.18);
+    background: color-mix(in srgb, var(--accent) 16%, var(--bg-2));
+    box-shadow: 0 1px 2px rgba(90, 60, 30, 0.12);
+    opacity: 0.9;
+    transform: rotate(-2.2deg);
+  }
+
+  // folded corner on each shelf card
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(225deg, var(--bg) 50%, var(--rule-2) 50%);
+  }
+
+  // the gutter of the book, and a deckled outer edge
+  .stage__sheet::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 2;
+    width: 24px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(90, 70, 40, 0.1), rgba(90, 70, 40, 0));
+  }
+
+  .stage__sheet::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 5px;
+    pointer-events: none;
+    background: repeating-linear-gradient(180deg, var(--rule-2) 0 3px, transparent 3px 6px);
+    opacity: 0.45;
+  }
+
+  // stitched seam under the rail header
+  .rail__head {
+    border-bottom: 1px dashed var(--rule-2);
+  }
+}
+
+/* --- industrial ---------------------------------------------------------- */
+
+[data-theme='dark'] {
+  .topbar,
+  .statusbar {
+    background-image: linear-gradient(180deg, #211f19, #17150f);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 1px 0 #000;
+  }
+
+  // rivets in the corners of the control panel
+  .rail::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    z-index: 1;
+    pointer-events: none;
+    background-image: radial-gradient(
+      circle at 50% 50%,
+      #615a46 0 1.4px,
+      #191712 1.4px 2.6px,
+      transparent 2.6px
+    );
+    background-repeat: no-repeat;
+    background-position:
+      0 0,
+      100% 0,
+      0 100%,
+      100% 100%;
+    background-size: 7px 7px;
+    opacity: 0.85;
+  }
+
+  .rail__head {
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      bottom: -1px;
+      left: 12px;
+      height: 2px;
+      background: repeating-linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--accent) 70%, transparent) 0 6px,
+        transparent 6px 12px
+      );
+      opacity: 0.3;
+    }
+  }
+
+  // the active tab is a lit indicator
+  .rail__tabs button.is-on::after {
+    height: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 85%, transparent);
+  }
+
+  .rail__tabs button.is-on {
+    background-image: linear-gradient(180deg, #26231c, #1b1915);
+  }
+
+  .btn {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 1px 0 rgba(0, 0, 0, 0.65);
+
+    &:active {
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+    }
+  }
+
+  .stage {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--rule) 34%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--rule) 34%, transparent) 1px, transparent 1px),
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.14) 0 1px, transparent 1px 4px);
+    background-size:
+      32px 32px,
+      32px 32px,
+      100% 4px;
+  }
+
+  // the page sits inside a machined frame
+  .stage__sheet {
+    border-color: #3b352b;
+    box-shadow:
+      0 0 0 1px #000,
+      inset 0 0 48px rgba(0, 0, 0, 0.45),
+      0 30px 70px -44px #000;
+  }
+
+  .gutter__head {
+    border-bottom-style: solid;
+    border-bottom-color: #2f2b23;
+  }
+
+  .note-card {
+    background-image: linear-gradient(180deg, #24211b, #1d1b16);
+    box-shadow:
+      0 0 0 1px #000,
+      0 10px 20px -16px #000;
+  }
+}

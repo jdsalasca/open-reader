@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ACCEPTED } from '../lib/book'
+import { pickBookWithHandle, supportsHandles } from '../lib/handles'
+import { DONATE_URL, REPO_URL } from '../lib/links'
 import { relativeTime, percent } from '../lib/format'
 import { LOCALES, LOCALE_LABEL, useI18n } from '../i18n'
 import type { MessageKey } from '../i18n/es'
@@ -13,7 +15,8 @@ interface Props {
   busy: boolean
   error: string | null
   onDismissError: () => void
-  onOpen: (file: File) => void
+  onOpen: (file: File, handle?: FileSystemFileHandle) => void
+  onOpenRecent: (entry: LibraryEntry) => Promise<boolean>
   onExportAll: () => void
   onImport: (file: File) => void
   onForget: (id: string) => void
@@ -29,6 +32,7 @@ export default function ShelfScreen({
   error,
   onDismissError,
   onOpen,
+  onOpenRecent,
   onExportAll,
   onImport,
   onForget,
@@ -40,7 +44,14 @@ export default function ShelfScreen({
   const [dragging, setDragging] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const choose = useCallback(() => input.current?.click(), [])
+  const choose = useCallback(async () => {
+    if (supportsHandles()) {
+      const picked = await pickBookWithHandle()
+      if (picked) onOpen(picked.file, picked.handle ?? undefined)
+      return
+    }
+    input.current?.click()
+  }, [onOpen])
 
   useEffect(() => {
     if (!settingsOpen) return
@@ -274,7 +285,13 @@ export default function ShelfScreen({
                     <span>{percent(entry.fraction)}</span>
                     <span>{relativeTime(entry.lastOpenedAt, locale)}</span>
                   </div>
-                  <button className="card__action" type="button" onClick={choose}>
+                  <button
+                    className="card__action"
+                    type="button"
+                    onClick={async () => {
+                      if (!(await onOpenRecent(entry))) void choose()
+                    }}
+                  >
                     {t('shelf.reopen')}
                     <Icon name="chevron-right" size={14} />
                   </button>
@@ -285,6 +302,16 @@ export default function ShelfScreen({
         </section>
 
         <footer className="shelf__foot">
+          <div className="shelf__support">
+            <p>{t('shelf.supportHint')}</p>
+            <a className="support" href={DONATE_URL} target="_blank" rel="noreferrer noopener">
+              <Icon name="heart-filled" size={14} />
+              {t('shelf.support')}
+            </a>
+            <a className="support support--ghost" href={REPO_URL} target="_blank" rel="noreferrer noopener">
+              {t('shelf.source')}
+            </a>
+          </div>
           <p>{t('shelf.foot')}</p>
           <div className="shelf__foot-actions">
             <button className="btn btn--ghost" type="button" onClick={onExportAll}>
@@ -320,3 +347,4 @@ export default function ShelfScreen({
     </div>
   )
 }
+

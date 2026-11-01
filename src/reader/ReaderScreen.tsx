@@ -21,6 +21,7 @@ import type {
   Annotation,
   BookMeta,
   BookProgress,
+  BookRecord,
   HighlightColor,
   HighlightStyle,
   LocationInfo,
@@ -60,25 +61,50 @@ interface QuoteTarget {
   chapter?: string
 }
 
-export default function ReaderScreen({
-  file,
-  bookId,
-  settings,
-  patchSettings,
-  onExit,
-}: Props) {
+export default function ReaderScreen(props: Props) {
   const { t } = useI18n()
-  const stored = useRef(loadBook(bookId))
+  const [stored, setStored] = useState<BookRecord | null | undefined>(undefined)
+
+  useEffect(() => {
+    let alive = true
+    void loadBook(props.bookId).then((record) => {
+      if (alive) setStored(record)
+    })
+    return () => {
+      alive = false
+    }
+  }, [props.bookId])
+
+  if (stored === undefined) {
+    return (
+      <div className="reader reader--loading">
+        <div className="stage__loading">
+          <span className="spinner" aria-hidden="true" />
+          <p>{t('reader.loading')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return <ReaderBook {...props} stored={stored} />
+}
+
+interface BookProps extends Props {
+  stored: BookRecord | null
+}
+
+function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: BookProps) {
+  const { t } = useI18n()
   const openedAt = useRef(Date.now())
 
   const [info, setInfo] = useState<BookInfo | null>(null)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [annotations, setAnnotations] = useState<Annotation[]>(
-    stored.current?.annotations ?? [],
+    stored?.annotations ?? [],
   )
   const [progress, setProgress] = useState<BookProgress>(
-    stored.current?.progress ?? EMPTY_PROGRESS,
+    stored?.progress ?? EMPTY_PROGRESS,
   )
   const [location, setLocation] = useState<LocationInfo | null>(null)
   const [selection, setSelection] = useState<SelectionInfo | null>(null)
@@ -112,7 +138,7 @@ export default function ReaderScreen({
         author: info.author,
         format: formatOf(file.name),
         fixedLayout: info.fixedLayout,
-        addedAt: stored.current?.meta.addedAt ?? openedAt.current,
+        addedAt: stored?.meta.addedAt ?? openedAt.current,
         lastOpenedAt: openedAt.current,
       }
     : null
@@ -123,7 +149,7 @@ export default function ReaderScreen({
   const persist = useCallback(() => {
     const current = snapshot.current
     if (!current.meta) return
-    saveBook({
+    void saveBook({
       meta: current.meta,
       progress: current.progress,
       annotations: current.annotations,
@@ -149,7 +175,7 @@ export default function ReaderScreen({
 
   const foliate = useFoliate({
     file,
-    initialCfi: stored.current?.progress.cfi ?? '',
+    initialCfi: stored?.progress.cfi ?? '',
     settings,
     theme: settings.theme,
     annotations,
@@ -499,8 +525,8 @@ export default function ReaderScreen({
 
   const importHere = async (picked: File) => {
     try {
-      importBackup(await picked.text())
-      const reloaded = loadBook(bookId)
+      await importBackup(await picked.text())
+      const reloaded = await loadBook(bookId)
       if (reloaded) setAnnotations(reloaded.annotations)
       flash(t('reader.toast.imported'))
     } catch {

@@ -165,6 +165,12 @@ export const es = {
 
   'error.title': 'Algo se rompió',
   'error.body': 'La app falló. Recarga la página; tus notas siguen guardadas.',
+  'shelf.support': "Apóyanos",
+  'shelf.supportHint': "Si te sirve, invítame un café.",
+  'shelf.source': "Código",
+  'settings.storage': "Almacenamiento",
+  'settings.storageOf': "{used} de {quota}",
+  'settings.storageHint': "Tus notas y los libros abiertos viven aquí, en este navegador. No hay servidor.",
   'error.reload': 'Recargar',
 } as const
 

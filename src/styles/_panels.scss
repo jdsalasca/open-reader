@@ -434,6 +434,34 @@
   line-height: 1.5;
 }
 
+.storage {
+  display: grid;
+  gap: 6px;
+}
+
+.storage__bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: var(--rule-2);
+
+  span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+  }
+}
+
+.storage__meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-3);
+  font-family: var(--f-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .panel__actions {
   display: flex;
   gap: 8px;

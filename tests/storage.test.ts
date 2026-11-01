@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   DEFAULT_SETTINGS,
@@ -12,6 +13,7 @@ import {
   saveSettings,
   touchLibrary,
 } from '../src/lib/storage'
+import { resetIdb } from '../src/lib/idb'
 import type { BookRecord } from '../src/lib/types'
 
 const meta: BookRecord['meta'] = {
@@ -43,9 +45,12 @@ describe('settings', () => {
 })
 
 describe('books', () => {
-  beforeEach(() => localStorage.clear())
+  beforeEach(async () => {
+    localStorage.clear()
+    await resetIdb()
+  })
 
-  it('stores notes and progress per book', () => {
+  it('stores notes and progress per book', async () => {
     const record: BookRecord = {
       meta,
       progress: { cfi: 'epubcfi(/6/4)', fraction: 0.4, chapter: 'Dos' },
@@ -64,21 +69,28 @@ describe('books', () => {
         },
       ],
     }
-    expect(saveBook(record)).toBe(true)
-    expect(loadBook('abc123')).toMatchObject({
+    expect(await saveBook(record)).toBe(true)
+    expect(await loadBook('abc123')).toMatchObject({
       progress: { fraction: 0.4 },
       annotations: [{ text: 'hola' }],
     })
-    expect(loadBook('otro')).toBeNull()
+    expect(await loadBook('otro')).toBeNull()
   })
 
-  it('fills missing progress instead of returning undefined', () => {
+  it('fills missing progress instead of returning undefined', async () => {
+    await saveBook({ meta, progress: EMPTY_PROGRESS, annotations: [] })
+    expect((await loadBook('abc123'))?.progress).toEqual(EMPTY_PROGRESS)
+    expect((await loadBook('abc123'))?.annotations).toEqual([])
+  })
+
+  it('migrates a record saved in localStorage', async () => {
     localStorage.setItem(
-      'openreader.v1.book.x',
-      JSON.stringify({ meta: { ...meta, id: 'x' } }),
+      'openreader.v1.book.abc123',
+      JSON.stringify({ meta, progress: { fraction: 0.7 }, annotations: [] }),
     )
-    expect(loadBook('x')?.progress).toEqual(EMPTY_PROGRESS)
-    expect(loadBook('x')?.annotations).toEqual([])
+    const record = await loadBook('abc123')
+    expect(record?.progress.fraction).toBe(0.7)
+    expect(localStorage.getItem('openreader.v1.book.abc123')).toBeNull()
   })
 
   it('keeps the most recent book first and drops duplicates', () => {
@@ -92,16 +104,19 @@ describe('books', () => {
 })
 
 describe('backup', () => {
-  beforeEach(() => localStorage.clear())
-
-  it('exports and re-imports a book', () => {
-    const record: BookRecord = { meta, progress: EMPTY_PROGRESS, annotations: [] }
-    const json = exportBackup([record])
-    expect(importBackup(json)).toBe(1)
-    expect(loadBook('abc123')?.meta.title).toBe('El libro')
+  beforeEach(async () => {
+    localStorage.clear()
+    await resetIdb()
   })
 
-  it('rejects json that is not a backup', () => {
-    expect(importBackup('{"hello":1}')).toBe(0)
+  it('exports and re-imports a book', async () => {
+    const record: BookRecord = { meta, progress: EMPTY_PROGRESS, annotations: [] }
+    const json = exportBackup([record])
+    expect(await importBackup(json)).toBe(1)
+    expect((await loadBook('abc123'))?.meta.title).toBe('El libro')
+  })
+
+  it('rejects json that is not a backup', async () => {
+    expect(await importBackup('{"hello":1}')).toBe(0)
   })
 })

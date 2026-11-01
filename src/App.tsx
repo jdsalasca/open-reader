@@ -10,8 +10,10 @@ import {
   loadBook,
   loadSettings,
   removeFromLibrary,
+  requestPersistence,
   saveSettings,
 } from './lib/storage'
+import { forgetFile, rememberFile, reopenBook } from './lib/handles'
 import { downloadText } from './lib/format'
 import { I18nProvider, resolveLocale, translate } from './i18n'
 import type { MessageKey } from './i18n/es'
@@ -38,15 +40,20 @@ export default function App() {
     saveSettings(settings)
   }, [settings])
 
+  useEffect(() => {
+    void requestPersistence()
+  }, [])
+
   const patchSettings = useCallback((patch: Partial<Settings>) => {
     setSettings((current) => ({ ...current, ...patch }))
   }, [])
 
-  const openFile = useCallback(async (file: File) => {
+  const openFile = useCallback(async (file: File, handle?: FileSystemFileHandle) => {
     setBusy(true)
     setError(null)
     try {
       const id = await fileId(file)
+      if (handle) void rememberFile(id, handle)
       setSession({ id, file })
     } catch {
       setError('shelf.error.read')
@@ -55,16 +62,34 @@ export default function App() {
     }
   }, [])
 
-  const exportAll = useCallback(() => {
-    const records = listLibrary()
-      .map((entry) => loadBook(entry.id))
-      .filter((record): record is BookRecord => Boolean(record))
+  /** One click on a shelf card: reopen the saved file, no picker. */
+  const openRecent = useCallback(
+    async (entry: LibraryEntry): Promise<boolean> => {
+      setBusy(true)
+      try {
+        const file = await reopenBook(entry.id)
+        if (!file) return false
+        await openFile(file)
+        return true
+      } finally {
+        setBusy(false)
+      }
+    },
+    [openFile],
+  )
+
+  const exportAll = useCallback(async () => {
+    const records: BookRecord[] = []
+    for (const entry of listLibrary()) {
+      const record = await loadBook(entry.id)
+      if (record) records.push(record)
+    }
     downloadText('open-reader-notas.eridu', exportBackup(records))
   }, [])
 
   const importAll = useCallback(async (file: File) => {
     try {
-      const count = importBackup(await file.text())
+      const count = await importBackup(await file.text())
       setLibrary(listLibrary())
       setError(count ? null : 'shelf.error.empty')
     } catch {
@@ -74,6 +99,7 @@ export default function App() {
 
   const forget = useCallback((id: string) => {
     removeFromLibrary(id)
+    void forgetFile(id)
     setLibrary(listLibrary())
   }, [])
 
@@ -108,6 +134,7 @@ export default function App() {
               error={error ? t(error) : null}
               onDismissError={() => setError(null)}
               onOpen={openFile}
+              onOpenRecent={openRecent}
               onExportAll={exportAll}
               onImport={importAll}
               onForget={forget}

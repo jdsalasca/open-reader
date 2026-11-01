@@ -161,5 +161,11 @@ export const zh: Record<MessageKey, string> = {
 
   'error.title': '出了点问题',
   'error.body': '应用出错。请刷新页面，笔记仍然保存着。',
+  'shelf.support': "支持我们",
+  'shelf.supportHint': "如果它帮到你，请我喝杯咖啡。",
+  'shelf.source': "源码",
+  'settings.storage': "存储",
+  'settings.storageOf': "{used} / {quota}",
+  'settings.storageHint': "你的笔记和打开过的书籍保存在此浏览器中，而不是服务器。",
   'error.reload': '刷新',
 }

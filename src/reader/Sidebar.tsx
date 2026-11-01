@@ -1,8 +1,9 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { BookInfo } from './useFoliate'
 import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS } from '../lib/reading'
-import { percent, relativeTime } from '../lib/format'
+import { percent, relativeTime, bytes } from '../lib/format'
 import { useI18n } from '../i18n'
+import { storageEstimate } from '../lib/storage'
 import { Icon } from '../components/Icons'
 import type { Annotation, LocationInfo, Settings, TocItem } from '../lib/types'
 
@@ -193,6 +194,21 @@ export default function Sidebar({
   const notes = annotations.filter((item) => item.kind === 'highlight')
   const quotes = notes.filter((item) => item.quoted)
   const bookmarks = annotations.filter((item) => item.kind === 'bookmark')
+
+  const [usage, setUsage] = useState<{ used: number; quota: number } | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    void storageEstimate().then((estimate) => {
+      if (alive) setUsage(estimate)
+    })
+    return () => {
+      alive = false
+    }
+  }, [annotations.length])
+
+  const usagePercent =
+    usage && usage.quota > 0 ? Math.min(100, Math.round((usage.used / usage.quota) * 100)) : 0
 
   return (
     <aside className="rail" aria-label="Panel del libro">
@@ -554,6 +570,21 @@ export default function Sidebar({
 
             <section className="panel__group">
               <h3>{t('settings.data')}</h3>
+              <div className="storage">
+                <div className="storage__bar" aria-hidden="true">
+                  <span style={{ width: `${usagePercent}%` }} />
+                </div>
+                <div className="storage__meta">
+                  <span>
+                    {t('settings.storageOf', {
+                      used: bytes(usage?.used ?? 0),
+                      quota: bytes(usage?.quota ?? 0),
+                    })}
+                  </span>
+                  <span>{usagePercent}%</span>
+                </div>
+                <p className="panel__hint">{t('settings.storageHint')}</p>
+              </div>
               <p className="panel__hint">{t('settings.dataHint')}</p>
               <div className="panel__actions">
                 <button className="btn btn--ghost" type="button" onClick={onExport}>
