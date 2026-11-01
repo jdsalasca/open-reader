@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Open Reader",
+  "version": "0.1.0",
+  "identifier": "top.eridu.openreader",
+  "build": {
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Open Reader",
+        "width": 1320,
+        "height": 880,
+        "minWidth": 900,
+        "minHeight": 620,
+        "backgroundColor": "#e7e0d2",
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; frame-src 'self' blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'"
+    }
+  },
+  "bundle": {
+    "active": false,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico"
+    ]
+  }
+}

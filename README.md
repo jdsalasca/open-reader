@@ -83,6 +83,24 @@ Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'
 Si prefieres no depender de Google Fonts, quita el `<link>` de `index.html` e
 instala las tipografías con `@fontsource`.
 
+## App de escritorio (Windows)
+
+Ya hay un binario listo en el repo: **`release/OpenReader.exe`** (5 MB, portable,
+sin instalación). Doble clic y abre el lector en su propia ventana con WebView2.
+
+Para reconstruirlo:
+
+```bash
+npm run app:build
+```
+
+Genera `src-tauri/target/release/open-reader.exe`, que es el que se copia a
+`release/`. El workflow `.github/workflows/windows-app.yml` también lo compila en
+cada tag `v*` y lo adjunta al release.
+
+Requiere Rust y las Build Tools de Visual Studio **solo para compilar**. Para
+usar el `.exe` no hace falta nada.
+
 ## Estructura
 
 ```
