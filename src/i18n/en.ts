@@ -129,6 +129,10 @@ export const en: Record<MessageKey, string> = {
   'settings.clear': 'Delete book notes',
   'settings.read': '{p} read',
   'settings.page': 'page {n}',
+  'settings.app': "App",
+  'settings.version': "Version {v} on this device.",
+  'settings.update': "Check for updates",
+  'settings.updateHint': "Clears the copy saved on this device and reloads the latest published version. Your notes and books stay.",
 
   'pop.note': 'Note',
   'pop.editNote': 'Edit note',

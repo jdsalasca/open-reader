@@ -125,6 +125,10 @@ export const zh: Record<MessageKey, string> = {
   'settings.clear': '删除本书笔记',
   'settings.read': '已读 {p}',
   'settings.page': '第 {n} 页',
+  'settings.app': "应用",
+  'settings.version': "此设备上的版本 {v}。",
+  'settings.update': "检查更新",
+  'settings.updateHint': "清除本地缓存并重新加载最新发布版本。笔记和图书不受影响。",
 
   'pop.note': '笔记',
   'pop.editNote': '编辑笔记',

@@ -158,6 +158,7 @@ export function useFoliate(options: FoliateOptions) {
     if (!container || !file) return
 
     let disposed = false
+    const instrumented = new WeakSet<Document>()
     const view = createView()
     view.style.display = 'block'
     view.style.width = '100%'
@@ -166,15 +167,9 @@ export function useFoliate(options: FoliateOptions) {
     viewRef.current = view
     painted.current.clear()
 
-    const readSelection = (doc: Document, index: number) => {
-      const selection = doc.getSelection()
-      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
-        handlers.current.onSelection(null)
-        return
-      }
-      const range = selection.getRangeAt(0)
-      const text = range.toString().replace(/\s+/g, ' ').trim()
-      if (!text) {
+    const emitSelection = (doc: Document, index: number, range: Range | null) => {
+      const text = range ? range.toString().replace(/\s+/g, ' ').trim() : ''
+      if (!range || !text) {
         handlers.current.onSelection(null)
         return
       }
@@ -220,6 +215,15 @@ export function useFoliate(options: FoliateOptions) {
       })
     }
 
+    const readSelection = (doc: Document, index: number) => {
+      const selection = doc.getSelection()
+      if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+        handlers.current.onSelection(null)
+        return
+      }
+      emitSelection(doc, index, selection.getRangeAt(0))
+    }
+
     const onLoad = (event: Event) => {
       const { doc, index } = (event as CustomEvent).detail as { doc: Document; index: number }
       doc.addEventListener('pointerdown', () => handlers.current.onSelection(null))
@@ -233,14 +237,12 @@ export function useFoliate(options: FoliateOptions) {
         settle = window.setTimeout(() => readSelection(doc, index), 260)
       })
       doc.addEventListener('keydown', (event) => handlers.current.onKeyDown(event as KeyboardEvent))
-      if (window.matchMedia('(pointer: coarse)').matches) {
+      // `any-pointer` cubre tablets con teclado o lápiz, donde el puntero
+      // principal puede reportarse como fino
+      if (window.matchMedia('(any-pointer: coarse)').matches && !instrumented.has(doc)) {
+        instrumented.add(doc)
         enableTouchSelection(doc, {
-          onSelect: (range) => {
-            const selection = doc.getSelection()
-            selection?.removeAllRanges()
-            selection?.addRange(range)
-            readSelection(doc, index)
-          },
+          onSelect: (range) => emitSelection(doc, index, range),
           onClear: () => handlers.current.onSelection(null),
         })
       }

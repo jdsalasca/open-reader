@@ -129,6 +129,10 @@ export const es = {
   'settings.clear': 'Borrar notas del libro',
   'settings.read': '{p} leído',
   'settings.page': 'página {n}',
+  'settings.app': "Aplicación",
+  'settings.version': "Versión {v} en este dispositivo.",
+  'settings.update': "Buscar actualización",
+  'settings.updateHint': "Borra la copia guardada y recarga la última versión publicada. Tus notas y tus libros no se tocan.",
 
   'pop.note': 'Nota',
   'pop.editNote': 'Editar nota',
