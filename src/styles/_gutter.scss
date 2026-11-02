@@ -504,3 +504,39 @@ input[type='range'],
     height: 30px;
   }
 }
+
+/* viewport estable: la barra del navegador no debe tapar los controles */
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 0;
+}
+
+.app,
+.reader {
+  height: 100%;
+  min-height: 0;
+}
+
+.shelf__bar,
+.topbar {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.statusbar {
+  height: calc(var(--status-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.shelf__main {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 820px) {
+  .app,
+  .reader {
+    height: 100svh;
+    max-height: 100svh;
+  }
+}
