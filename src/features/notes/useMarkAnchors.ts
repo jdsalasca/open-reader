@@ -19,9 +19,9 @@ export function useMarkAnchors(): Record<string, number> {
     const run = () => {
       const next = markAnchors()
       setAnchors(next)
-      if (!Object.keys(next).length && attempt < 6) {
+      if (!Object.keys(next).length && attempt < 12) {
         attempt += 1
-        timer = window.setTimeout(run, 200)
+        timer = window.setTimeout(run, 250)
       }
     }
 

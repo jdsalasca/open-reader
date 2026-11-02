@@ -383,6 +383,16 @@
   }
 }
 
+.comment-bubble--yellow {
+  border-color: var(--sticky-tab-yellow);
+  color: var(--sticky-tab-yellow);
+}
+
+.comment-bubble--purple {
+  border-color: var(--sticky-tab-purple);
+  color: var(--sticky-tab-purple);
+}
+
 /* el post-it es un triangulito de color en el canto, no una banda sobre el texto */
 .postit-tab {
   position: absolute;

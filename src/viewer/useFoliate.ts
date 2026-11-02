@@ -84,6 +84,12 @@ export function useFoliate(options: FoliateOptions) {
   const settingsRef = useRef(options.settings)
   /** cfi → section index currently painted, so stale marks can be erased. */
   const painted = useRef(new Map<number, Set<string>>())
+  /**
+   * Where the engine actually drew each mark, in page coordinates. Sale de los
+   * rectángulos que foliate ya calcula al pintar: no hay que resolver CFIs ni
+   * adivinar cuándo está listo el DOM.
+   */
+  const drawn = useRef(new Map<string, { index: number; top: number }>())
   const redrawRef = useRef<() => void>(() => undefined)
   const retryTimer = useRef<number | undefined>(undefined)
   const retries = useRef(0)
@@ -116,6 +122,10 @@ export function useFoliate(options: FoliateOptions) {
       for (const content of contents) {
         if (typeof content.index !== 'number') continue
         if (onlyIndex !== undefined && content.index !== onlyIndex) continue
+        // al repintar, las posiciones de esta sección se vuelven a calcular
+        for (const [id, value] of drawn.current) {
+          if (value.index === content.index) drawn.current.delete(id)
+        }
         const desired = new Map(
           annotationsRef.current
             .filter((item) => item.kind === 'highlight' && item.index === content.index)
@@ -254,7 +264,18 @@ export function useFoliate(options: FoliateOptions) {
         draw: (fn: unknown, options: unknown) => void
         annotation: Annotation
       }
-      drawAnnotation(draw as never, annotation)
+      // `draw` nos entrega los rectángulos de la marca: de ahí sale su altura
+      const capture =
+        (next: (rects: DOMRect[], options: unknown) => SVGGElement) =>
+        (rects: DOMRect[], options: unknown) => {
+          const first = rects[0]
+          if (first) drawn.current.set(annotation.id, { index: annotation.index, top: first.top })
+          return next(rects, options)
+        }
+      drawAnnotation(
+        (fn, options) => draw(capture((rects, opts) => fn(rects, opts as never)), options),
+        annotation,
+      )
     }
 
     const onShowAnnotation = (event: Event) => {
@@ -427,33 +448,19 @@ export function useFoliate(options: FoliateOptions) {
     viewRef.current?.clearSearch()
   }, [])
 
-  /** Y position (viewport px) of every mark in the current section. */
+  /** Y position (viewport px) of every mark the engine has painted. */
   const markAnchors = useCallback((): Record<string, number> => {
     const view = viewRef.current
     if (!view?.renderer?.getContents) return {}
-    const out: Record<string, number> = {}
-    let contents: { doc: Document; index: number }[] = []
+    let frameTop = 0
     try {
-      contents = view.renderer.getContents()
+      const contents = view.renderer.getContents()
+      frameTop = frameRectOf(contents[0]?.doc ?? document)?.top ?? 0
     } catch {
-      return out
+      return {}
     }
-    for (const content of contents) {
-      for (const mark of annotationsRef.current) {
-        if (mark.kind !== 'highlight' || mark.index !== content.index) continue
-        try {
-          const resolved = view.resolveNavigation(mark.cfi)
-          if (!resolved) continue
-          const anchor = resolved.anchor(content.doc)
-          const rect = (anchor as Range)?.getBoundingClientRect?.()
-          if (!rect) continue
-          const frame = content.doc.defaultView?.frameElement as HTMLElement | null
-          out[mark.id] = (frame?.getBoundingClientRect().top ?? 0) + rect.top
-        } catch {
-          /* mark not in this section */
-        }
-      }
-    }
+    const out: Record<string, number> = {}
+    for (const [id, value] of drawn.current) out[id] = frameTop + value.top
     return out
   }, [])
 

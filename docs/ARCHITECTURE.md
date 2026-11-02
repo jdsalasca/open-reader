@@ -120,6 +120,11 @@ Decisiones conscientes:
   pasa a segundo plano, así que `core/wakeLock.ts` la vuelve a pedir al regresar
   (`visibilitychange`). Sin HTTPS no se concede y en navegadores viejos el botón
   ni aparece.
+- **Marcas al borde**: `markAnchors()` no resuelve CFIs. Toma las alturas de los
+  rectángulos que el propio foliate entrega en `draw-annotation` al pintar cada
+  marca, así que no hay carrera con el DOM: si la marca se pintó, tiene altura.
+  `core/markers.ts` ordena, numera (1…9, «9+») y apila sin solapes; sus reglas
+  están cubiertas en `tests/markers.test.ts`.
 - **El motor vive en un shadow root cerrado**: `document.querySelector` no lo
   atraviesa. Para probar desde la consola, usa
   `document.querySelector('foliate-view').renderer.getContents()`.

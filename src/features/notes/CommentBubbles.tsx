@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { useI18n } from '../../i18n'
+import { fitMarkers, placeMarkers } from '../../core/markers'
 import { useReader } from '../../viewer/ReaderContext'
 import type { Annotation } from '../../core/types'
 import { useMarkAnchors } from './useMarkAnchors'
@@ -7,78 +8,69 @@ import { useMarkAnchors } from './useMarkAnchors'
 /**
  * Marcas en el borde de la hoja, como en Google Docs.
  *
- * - Un **comentario** (anotación con texto) es una burbuja cerrada con su
- *   número: 1…9 y «9+», en orden de lectura. El texto no se ve hasta tocarla.
- * - Un **post-it** (sin texto) es un triangulito de color asomando por el canto,
- *   a la altura del pasaje: no pinta nada encima del renglón.
+ * - **Comentario** (cualquier resaltado): burbuja cerrada con su número, 1…9 y
+ *   «9+», en orden de lectura. El texto no se ve hasta tocarla.
+ * - **Post-it** (sin nota escrita): triangulito de color en el canto; no gasta
+ *   número y no pinta nada sobre el renglón.
  *
- * Las anotaciones llegan del store; cuando exista el lector colaborativo, esas
- * mismas marcas servirán para los comentarios de otras personas.
+ * Las alturas vienen del motor (`markAnchors`), que las toma de los rectángulos
+ * que ya calculó al pintar la marca.
  */
 export default function CommentBubbles() {
   const { t } = useI18n()
   const { annotations, location, openNote, activate } = useReader()
   const anchors = useMarkAnchors()
   const box = useRef<HTMLDivElement | null>(null)
-  const [tops, setTops] = useState<Record<string, number>>({})
+  const [offset, setOffset] = useState(0)
 
-  const marks = annotations.filter(
-    (item) => item.kind === 'highlight' && item.index === location?.index,
+  const markers = fitMarkers(
+    placeMarkers(annotations, location?.index ?? -1, anchors),
+    offset,
   )
+  const byId = new Map(annotations.map((item) => [item.id, item]))
 
+  // las alturas son del viewport; la capa vive dentro de la hoja
   useLayoutEffect(() => {
     const element = box.current
     if (!element) return
-    const base = element.getBoundingClientRect().top
-    const height = element.clientHeight
-    const next: Record<string, number> = {}
-    for (const mark of marks) {
-      const absolute = anchors[mark.id]
-      next[mark.id] =
-        absolute === undefined ? -1 : Math.min(Math.max(6, absolute - base - 10), height - 30)
-    }
-    setTops(next)
-  }, [anchors, marks.length])
-
-  const placed = marks
-    .map((mark) => ({ mark, top: tops[mark.id] ?? -1 }))
-    .filter((item) => item.top >= 0)
-    .sort((a, b) => a.top - b.top)
-
-  const comments = placed.filter((item) => item.mark.note.trim().length > 0)
-  const stickies = placed.filter((item) => item.mark.sticky && !item.mark.note.trim().length)
-
-  // si un post-it cae en el mismo renglón que un comentario, baja para no taparse
-  const tabTop = (top: number) =>
-    comments.some((comment) => Math.abs(comment.top - top) < 24) ? top + 24 : top
+    setOffset(element.getBoundingClientRect().top)
+  }, [markers.length, location?.cfi])
 
   return (
     <div className="comments" ref={box}>
-      {stickies.map(({ mark, top }) => (
-        <button
-          key={mark.id}
-          type="button"
-          className={`postit-tab postit-tab--${mark.sticky}`}
-          style={{ top: tabTop(top) }}
-          title={t('sticky.label')}
-          aria-label={t('sticky.label')}
-          onClick={() => activate(mark)}
-        />
-      ))}
+      {markers.map((marker) => {
+        const note = byId.get(marker.id)
+        if (!note) return null
+        const top = marker.top
 
-      {comments.map(({ mark, top }, index) => (
-        <button
-          key={mark.id}
-          type="button"
-          className="comment-bubble"
-          style={{ top }}
-          title={mark.note}
-          aria-label={t('comments.bubble', { n: index + 1 })}
-          onClick={() => openNote(draftOf(mark))}
-        >
-          {index < 9 ? index + 1 : '9+'}
-        </button>
-      ))}
+        if (marker.kind === 'sticky') {
+          return (
+            <button
+              key={marker.id}
+              type="button"
+              className={`postit-tab postit-tab--${marker.color ?? 'yellow'}`}
+              style={{ top }}
+              title={t('sticky.label')}
+              aria-label={t('sticky.label')}
+              onClick={() => activate(note)}
+            />
+          )
+        }
+
+        return (
+          <button
+            key={marker.id}
+            type="button"
+            className={`comment-bubble${marker.color ? ` comment-bubble--${marker.color}` : ''}`}
+            style={{ top }}
+            title={note.note || note.text}
+            aria-label={t('comments.bubble', { n: marker.label })}
+            onClick={() => openNote(draftOf(note))}
+          >
+            {marker.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
