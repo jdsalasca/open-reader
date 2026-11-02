@@ -162,6 +162,9 @@ export const zh: Record<MessageKey, string> = {
   'note.hint': 'Ctrl + Enter 保存',
   'note.cancel': '取消',
   'note.save': '保存',
+  'note.delete': "删除",
+  'note.deleteYes': "确认删除",
+  'note.deleteHint': "将删除评论及其高亮，且无法撤销。",
 
   'quote.title': '引文',
   'quote.hint': '随书籍保存',

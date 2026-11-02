@@ -166,6 +166,9 @@ export const es = {
   'note.hint': 'Ctrl + Enter para guardar',
   'note.cancel': 'Cancelar',
   'note.save': 'Guardar',
+  'note.delete': "Eliminar",
+  'note.deleteYes': "Sí, eliminar",
+  'note.deleteHint': "Se borra el comentario y su resaltado. No se puede deshacer.",
 
   'quote.title': 'Cita',
   'quote.hint': 'Se guarda con el libro',

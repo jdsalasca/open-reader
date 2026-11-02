@@ -166,6 +166,9 @@ export const en: Record<MessageKey, string> = {
   'note.hint': 'Ctrl + Enter to save',
   'note.cancel': 'Cancel',
   'note.save': 'Save',
+  'note.delete': "Delete",
+  'note.deleteYes': "Yes, delete",
+  'note.deleteHint': "The comment and its highlight are removed. This cannot be undone.",
 
   'quote.title': 'Quote',
   'quote.hint': 'Saved with the book',

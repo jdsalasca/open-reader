@@ -1,2 +1,2 @@
 /** Versión visible en el pie de la portada. Se sube a mano en cada entrega. */
-export const APP_VERSION = '1.1.2'
+export const APP_VERSION = '1.1.3'
