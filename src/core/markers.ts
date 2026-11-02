@@ -64,10 +64,11 @@ export function visibleAnchors(
 /**
  * Decide qué marcas se ven en el borde de la hoja y a qué altura.
  *
- * - Un **comentario** (resaltado, o post-it con nota escrita) es una burbuja
- *   numerada en orden de lectura.
- * - Un **post-it** sin nota es una pestaña de color, y no gasta número.
- * - Si dos marcas caen en el mismo renglón, se apilan: nunca una encima de otra.
+ * - **Comentario** (anotación con texto escrito) → burbuja numerada en orden de
+ *   lectura.
+ * - **Post-it** (sin texto) → pestaña de color; no gasta número.
+ * - **Resaltado simple** (sin texto) → ninguna marca: se ve con su banda en el
+ *   texto y ya.
  *
  * Solo entran las anotaciones que traen altura en `anchors`, y esas son
  * exactamente las que el motor tiene pintadas ahora mismo. Por eso aquí no se
@@ -92,8 +93,11 @@ export function placeMarkers(
   let number = 0
 
   for (const { item, top } of placed) {
-    const isSticky = Boolean(item.sticky) && !item.note.trim()
-    if (isSticky) {
+    const note = item.note.trim()
+
+    if (!note) {
+      // sin comentario: o es un post-it, o es un resaltado y no lleva marca
+      if (!item.sticky) continue
       // ni encima de una burbuja ni encima de otra pestaña
       let y = top
       const busy = (value: number) =>
@@ -110,6 +114,7 @@ export function placeMarkers(
       })
       continue
     }
+
     // dos marcas en el mismo renglón se apilan: nunca una encima de otra
     let y = top
     while (bubbles.some((used) => Math.abs(used - y) < BUBBLE_HEIGHT)) y += BUBBLE_HEIGHT
