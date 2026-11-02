@@ -18,6 +18,7 @@ import {
   type FoliateView,
 } from '../core/foliate'
 import { normalizeToc } from '../core/toc'
+import { visibleAnchors, type DrawnMark, type VisibleWindow } from '../core/markers'
 
 export interface BookInfo {
   title: string
@@ -89,7 +90,7 @@ export function useFoliate(options: FoliateOptions) {
    * rectángulos que foliate ya calcula al pintar: no hay que resolver CFIs ni
    * adivinar cuándo está listo el DOM.
    */
-  const drawn = useRef(new Map<string, { index: number; top: number }>())
+  const drawn = useRef(new Map<string, DrawnMark>())
   /** Sube cada vez que el motor pinta una marca: avisa a la capa de burbujas. */
   const [marksVersion, setMarksVersion] = useState(0)
   const redrawRef = useRef<() => void>(() => undefined)
@@ -264,7 +265,11 @@ export function useFoliate(options: FoliateOptions) {
         (rects: DOMRect[], options: unknown) => {
           const first = rects[0]
           if (first) {
-            drawn.current.set(annotation.id, { index: annotation.index, top: first.top })
+            drawn.current.set(annotation.id, {
+              index: annotation.index,
+              top: first.top,
+              left: first.left,
+            })
             setMarksVersion((value) => value + 1)
           }
           return next(rects, options)
@@ -445,26 +450,30 @@ export function useFoliate(options: FoliateOptions) {
     viewRef.current?.clearSearch()
   }, [])
 
-  /** Y position (viewport px) de las marcas que el motor tiene pintadas ahora. */
+  /** Y position (viewport px) de las marcas que están en la página abierta. */
   const markAnchors = useCallback((): Record<string, number> => {
     const view = viewRef.current
     if (!view?.renderer?.getContents) return {}
     let frameTop = 0
+    let window: VisibleWindow = { from: 0, to: 0 }
     let live = new Set<number>()
     try {
       const contents = view.renderer.getContents()
-      frameTop = frameRectOf(contents[0]?.doc ?? document)?.top ?? 0
+      const doc = contents[0]?.doc
+      const frame = frameRectOf(doc ?? document)
+      const host = view.getBoundingClientRect()
+      frameTop = frame?.top ?? 0
+      // el paginador desplaza el iframe: lo visible es la rebanada del capítulo
+      // que cae dentro del ancho de la hoja
+      if (frame && host.width > 0) {
+        window = { from: host.left - frame.left, to: host.right - frame.left }
+      }
       live = new Set(contents.map((content) => content.index))
     } catch {
       return {}
     }
-    const out: Record<string, number> = {}
-    for (const [id, value] of drawn.current) {
-      if (live.has(value.index)) out[id] = frameTop + value.top
-    }
-    return out
+    return visibleAnchors(drawn.current, live, window, frameTop)
   }, [])
-
   return {
     containerRef,
     goTo,

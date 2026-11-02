@@ -18,6 +18,49 @@ const TAB_HEIGHT = 20
 /** Separación mínima entre dos marcas ya colocadas en pantalla. */
 const STEP = 22
 
+/** Marca tal como la dejó el motor: sección, altura y columna de la página. */
+export interface DrawnMark {
+  index: number
+  top: number
+  left: number
+}
+
+/**
+ * Ventana visible dentro del documento del libro, en sus propias coordenadas.
+ *
+ * El paginador no recorta: **desplaza el iframe** a la izquierda para mostrar
+ * la columna que toca (`frame.left` negativo). Las marcas guardan su
+ * coordenada dentro del capítulo entero, así que para saber si una está en la
+ * página abierta hay que compararla con esta ventana, no con `[0, ancho)`.
+ */
+export interface VisibleWindow {
+  from: number
+  to: number
+}
+
+/**
+ * Alturas de las marcas que de verdad están en la página abierta.
+ *
+ * Sin este filtro se amontonaban al canto las notas de todo el capítulo, que el
+ * motor maqueta de una vez en columnas.
+ */
+export function visibleAnchors(
+  drawn: Iterable<[string, DrawnMark]>,
+  live: Set<number>,
+  window: VisibleWindow,
+  frameTop: number,
+): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const [id, value] of drawn) {
+    if (!live.has(value.index)) continue
+    if (window.to > window.from && (value.left < window.from - 1 || value.left >= window.to)) {
+      continue
+    }
+    out[id] = frameTop + value.top
+  }
+  return out
+}
+
 /**
  * Decide qué marcas se ven en el borde de la hoja y a qué altura.
  *

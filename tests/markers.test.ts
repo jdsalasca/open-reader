@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fitMarkers, placeMarkers } from '../src/core/markers'
+import { fitMarkers, placeMarkers, visibleAnchors } from '../src/core/markers'
 import type { Annotation } from '../src/core/types'
 
 const mark = (id: string, patch: Partial<Annotation> = {}): Annotation => ({
@@ -104,6 +104,43 @@ describe('placeMarkers', () => {
 
   it('sin marcas devuelve una lista vacía', () => {
     expect(placeMarkers([], {})).toEqual([])
+  })
+})
+
+describe('visibleAnchors', () => {
+  const drawn = (
+    index: number,
+    top: number,
+    left: number,
+  ): [string, { index: number; top: number; left: number }] => [
+    `m-${index}-${top}-${left}`,
+    { index, top, left },
+  ]
+
+  it('conserva las marcas de la página abierta', () => {
+    const out = visibleAnchors([drawn(2, 100, 40)], new Set([2]), { from: 0, to: 600 }, 50)
+    expect(Object.values(out)).toEqual([150])
+  })
+
+  it('descarta las de otra columna del mismo capítulo', () => {
+    // el paginador desplaza el iframe: esta página va de 634 a 1024
+    const out = visibleAnchors(
+      [drawn(2, 100, 29), drawn(2, 300, 700)],
+      new Set([2]),
+      { from: 634, to: 1024 },
+      0,
+    )
+    expect(Object.values(out)).toEqual([300])
+  })
+
+  it('descarta las de una sección que ya no está cargada', () => {
+    const out = visibleAnchors([drawn(7, 100, 40)], new Set([2]), { from: 0, to: 600 }, 0)
+    expect(out).toEqual({})
+  })
+
+  it('sin ventana conocida no filtra por columna', () => {
+    const out = visibleAnchors([drawn(2, 100, 900)], new Set([2]), { from: 0, to: 0 }, 0)
+    expect(Object.keys(out)).toHaveLength(1)
   })
 })
 
