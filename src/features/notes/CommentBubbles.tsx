@@ -1,5 +1,4 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { Icon } from '../../components/Icons'
 import { useI18n } from '../../i18n'
 import { useReader } from '../../viewer/ReaderContext'
 import type { Annotation } from '../../core/types'
@@ -8,10 +7,10 @@ import { useMarkAnchors } from './useMarkAnchors'
 /**
  * Marcas en el borde de la hoja, como en Google Docs.
  *
- * - Un **comentario** (anotación con texto) sale como burbuja numerada: 1…9 y
- *   «9+», en orden de lectura.
- * - Un **post-it** (sin texto) sale como tira de color asomando por el borde,
- *   igual que el papelito pegado en el libro de verdad.
+ * - Un **comentario** (anotación con texto) es una burbuja cerrada con su
+ *   número: 1…9 y «9+», en orden de lectura. El texto no se ve hasta tocarla.
+ * - Un **post-it** (sin texto) es un triangulito de color asomando por el canto,
+ *   a la altura del pasaje: no pinta nada encima del renglón.
  *
  * Las anotaciones llegan del store; cuando exista el lector colaborativo, esas
  * mismas marcas servirán para los comentarios de otras personas.
@@ -56,7 +55,8 @@ export default function CommentBubbles() {
           key={mark.id}
           type="button"
           className={`postit-tab postit-tab--${mark.sticky}`}
-          style={{ top }}
+          // +12 para no chocar con una burbuja de comentario en el mismo renglón
+          style={{ top: top + 12 }}
           title={t('sticky.label')}
           aria-label={t('sticky.label')}
           onClick={() => activate(mark)}
@@ -69,12 +69,11 @@ export default function CommentBubbles() {
           type="button"
           className="comment-bubble"
           style={{ top }}
-          title={mark.note || mark.text}
+          title={mark.note}
           aria-label={t('comments.bubble', { n: index + 1 })}
           onClick={() => openNote(draftOf(mark))}
         >
-          <Icon name="note" size={11} />
-          <span>{index < 9 ? index + 1 : '9+'}</span>
+          {index < 9 ? index + 1 : '9+'}
         </button>
       ))}
     </div>

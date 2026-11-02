@@ -1,7 +1,7 @@
 // @ts-expect-error -- foliate-js is vendored plain JavaScript
 import { Overlayer } from '../vendor/foliate/overlayer.js'
 import type { Annotation, HighlightStyle } from './types'
-import { HIGHLIGHT_COLORS, STICKY_COLORS } from './reading'
+import { HIGHLIGHT_COLORS } from './reading'
 
 type DrawOptions = { color: string; width: number; noteColor?: string }
 type DrawFn = (rects: DOMRect[], options: DrawOptions) => SVGGElement
@@ -14,6 +14,9 @@ const BASE: Record<HighlightStyle, DrawFn> = {
   squiggly: Overlayer.squiggly,
   strike: Overlayer.strikethrough,
 }
+
+/** Nothing on the page: the marker lives at the edge (see `CommentBubbles`). */
+const blank: DrawFn = () => document.createElementNS(SVG, 'g')
 
 /** A small pin on the last rect, so a highlight with a note is recognisable. */
 function pin(g: SVGGElement, rects: DOMRect[], options: DrawOptions): SVGGElement {
@@ -31,29 +34,14 @@ function pin(g: SVGGElement, rects: DOMRect[], options: DrawOptions): SVGGElemen
 }
 
 /**
- * A post-it is a strip of paper over the line, not a wash: a short band with
- * rounded ends and a bit of air above and below.
- */
-function postit(rects: DOMRect[], options: DrawOptions): SVGGElement {
-  const g = document.createElementNS(SVG, 'g')
-  g.setAttribute('fill', options.color)
-  g.style.opacity = '0.72'
-  for (const { left, top, height, width } of rects) {
-    const pad = Math.max(1, height * 0.14)
-    const el = document.createElementNS(SVG, 'rect')
-    el.setAttribute('x', String(left - 1.5))
-    el.setAttribute('y', String(top + pad))
-    el.setAttribute('width', String(width + 3))
-    el.setAttribute('height', String(Math.max(2, height - pad * 2)))
-    el.setAttribute('rx', '2')
-    g.append(el)
-  }
-  return g
-}
-
-/**
  * Wraps foliate's `draw` callback: picks the geometry for the annotation style
  * and, when the annotation carries a note, pins a dot at the end of the mark.
+ *
+ * Dos cosas no se pintan sobre el texto:
+ * - **Marcadores de página**: su CFI es un punto, así que resaltarlo cubriría la
+ *   hoja entera.
+ * - **Post-it**: se marcan con su pestaña en el borde de la página; una banda de
+ *   color sobre el renglón tapaba la lectura.
  */
 export function drawAnnotation(
   draw: (fn: DrawFn, options: DrawOptions) => void,
@@ -61,17 +49,18 @@ export function drawAnnotation(
 ): void {
   const color = HIGHLIGHT_COLORS[annotation.color]?.hex ?? HIGHLIGHT_COLORS.amber.hex
   const noteColor = HIGHLIGHT_COLORS[annotation.color]?.deep ?? HIGHLIGHT_COLORS.amber.deep
-  const base = BASE[annotation.style] ?? BASE.highlight
-  const stickyColor = annotation.sticky ? STICKY_COLORS[annotation.sticky] : null
 
-  let fn: DrawFn = base
-  if (stickyColor) fn = (rects, options) => postit(rects, options)
-  if (annotation.note) {
-    const under = fn
-    fn = (rects, options) => pin(under(rects, options), rects, options)
+  if (annotation.kind !== 'highlight' || annotation.sticky) {
+    draw(blank, { color, width: 0, noteColor })
+    return
   }
 
-  draw(fn, { color: stickyColor ?? color, width: 2.2, noteColor })
+  const base = BASE[annotation.style] ?? BASE.highlight
+  const fn: DrawFn = annotation.note
+    ? (rects, options) => pin(base(rects, options), rects, options)
+    : base
+
+  draw(fn, { color, width: 2.2, noteColor })
 }
 
 /** How search hits are marked in the page: a quiet accent box. */

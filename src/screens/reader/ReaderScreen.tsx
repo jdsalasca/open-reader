@@ -219,7 +219,8 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
 
     addAnnotation(annotation) {
       setAnnotations((list) => [...list, annotation])
-      foliate.addAnnotation(annotation)
+      // los marcadores de página no se dibujan en el libro
+      if (annotation.kind === 'highlight') foliate.addAnnotation(annotation)
     },
     updateAnnotation(id, patch) {
       setAnnotations((list) => list.map((item) => (item.id === id ? { ...item, ...patch } : item)))

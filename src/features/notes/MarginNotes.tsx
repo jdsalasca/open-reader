@@ -1,4 +1,3 @@
-import { useLayoutEffect, useRef, useState } from 'react'
 import { HIGHLIGHT_COLORS } from '../../core/reading'
 import { relativeTime } from '../../core/format'
 import { useI18n } from '../../i18n/index'
@@ -7,7 +6,6 @@ import type { Annotation } from '../../core/types'
 
 interface Props {
   annotations: Annotation[]
-  anchors: Record<string, number>
   collapsed: boolean
   chapter: string
   onToggle: () => void
@@ -17,12 +15,11 @@ interface Props {
 }
 
 /**
- * Notes as margin comments. Expanded: paper slips. Collapsed: bubbles pinned
- * to the height of their highlight, like Google Docs.
+ * Notes as margin cards. The markers that point at each passage live on the
+ * page itself (`CommentBubbles`), so the collapsed column is only its handle.
  */
 export default function MarginNotes({
   annotations,
-  anchors,
   collapsed,
   chapter,
   onToggle,
@@ -31,30 +28,14 @@ export default function MarginNotes({
   onDelete,
 }: Props) {
   const { t, locale } = useI18n()
-  const box = useRef<HTMLElement | null>(null)
-  const [tops, setTops] = useState<Record<string, number>>({})
 
   const notes = annotations
     .filter((item) => item.kind === 'highlight')
     .sort((a, b) => a.createdAt - b.createdAt)
 
-  useLayoutEffect(() => {
-    if (!collapsed) return
-    const element = box.current
-    if (!element) return
-    const base = element.getBoundingClientRect().top
-    const height = element.clientHeight
-    const next: Record<string, number> = {}
-    for (const note of notes) {
-      const absolute = anchors[note.id]
-      next[note.id] = absolute === undefined ? 0 : Math.min(Math.max(8, absolute - base), height - 34)
-    }
-    setTops(next)
-  }, [collapsed, anchors, notes.length])
-
   if (collapsed) {
     return (
-      <aside className="gutter gutter--mini" ref={box} aria-label={t('margin.title')}>
+      <aside className="gutter gutter--mini" aria-label={t('margin.title')}>
         <button
           className="gutter__toggle"
           type="button"
@@ -64,21 +45,6 @@ export default function MarginNotes({
         >
           <Icon name="note" size={14} />
         </button>
-        {notes.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`bubble${item.note ? ' bubble--full' : ''}`}
-            style={{
-              top: tops[item.id] ?? 0,
-              borderColor: HIGHLIGHT_COLORS[item.color].hex,
-            }}
-            title={item.note || item.text}
-            onClick={() => onOpen(item)}
-          >
-            <Icon name="note" size={12} />
-          </button>
-        ))}
       </aside>
     )
   }

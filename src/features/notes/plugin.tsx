@@ -9,7 +9,6 @@ import type { ViewerPlugin } from '../../viewer/plugins/types'
 import MarginNotes from './MarginNotes'
 import NoteDialog from './NoteDialog'
 import CommentBubbles from './CommentBubbles'
-import { useMarkAnchors } from './useMarkAnchors'
 
 export const NOTES_TAB = 'notes'
 
@@ -127,15 +126,14 @@ function NotesAction() {
 function MarginAside() {
   const { settings, location, annotations, goTo, updateAnnotation, deleteAnnotation } =
     useReader()
-  const anchors = useMarkAnchors()
-  const [collapsed, setCollapsed] = useState(false)
+  // los comentarios no se abren solos: el margen arranca plegado
+  const [collapsed, setCollapsed] = useState(true)
 
   if (!settings.marginNotes) return null
 
   return (
     <MarginNotes
       annotations={annotations.filter((item) => item.index === location?.index)}
-      anchors={anchors}
       collapsed={collapsed}
       chapter={location?.chapter ?? ''}
       onToggle={() => setCollapsed((value) => !value)}
