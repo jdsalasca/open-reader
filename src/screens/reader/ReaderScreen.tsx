@@ -91,6 +91,7 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
   const [toast, setToast] = useState<string | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
   const handlerRef = useRef<(event: KeyboardEvent) => void>(() => undefined)
+  const sheetRef = useRef<HTMLDivElement | null>(null)
 
   const meta: BookMeta | null = info
     ? {
@@ -302,6 +303,23 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
     resetProgress: () => setProgress(EMPTY_PROGRESS),
   }
 
+  /**
+   * Los márgenes vacíos del escenario también pasan página: izquierda atrás,
+   * derecha adelante. Se compara con la caja real de la hoja, así que el texto
+   * y el margen de notas nunca pierden un clic.
+   */
+  const turnFromStage = (event: React.MouseEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) return
+    if (selection || active) {
+      dismiss()
+      return
+    }
+    const sheet = sheetRef.current?.getBoundingClientRect()
+    if (!sheet) return
+    if (event.clientX < sheet.left) foliate.prev()
+    else if (event.clientX > sheet.right) foliate.next()
+  }
+
   const handleKey = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement | null
     if (target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
@@ -373,9 +391,10 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
         <div className="reader__body">
           {panel.open && <BookPanel tabs={registry.tabs} />}
 
-          <main className="stage">
+          <main className="stage" onClick={turnFromStage}>
             <div
               className="stage__sheet"
+              ref={sheetRef}
               style={
                 info && !info.fixedLayout
                   ? { maxWidth: Math.round(settings.columnWidth * 1.214) }
