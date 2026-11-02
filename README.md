@@ -171,7 +171,7 @@ src/
   viewer/      motor (useFoliate), estado de la sesión (ReaderContext) y el
                contrato de plugins con su registro
   features/    cada función del lector como plugin: índice, búsqueda, notas,
-               resaltados, citas, marcadores, ajustes y selección táctil
+               resaltados, citas, marcadores y ajustes
   screens/     estantería y pantalla de lectura (barra, panel, pie)
   ui/          controles y diálogo reutilizables
   styles/      SCSS: tokens, base, shelf, reader, panels, gutter, popover, decor

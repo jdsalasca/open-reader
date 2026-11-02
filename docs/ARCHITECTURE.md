@@ -39,13 +39,12 @@ src/
     notes/                plugin.tsx        pestaña + margen + diálogo de nota
                           MarginNotes.tsx   tarjetas y burbujas
                           NoteDialog.tsx
-    highlights/           plugin.tsx        barra de colores sobre la selección
-                          SelectionPopover.tsx
+    highlights/           plugin.tsx        barra de anotar (fija, arriba)
+                          SelectionBar.tsx
     quotes/               plugin.tsx        tarjeta de cita
                           QuoteDialog.tsx
     bookmarks/            plugin.tsx        botón, atajo b y pestaña marcas
-    settings/             plugin.tsx        pestaña ajustes y datos
-    touch/                selection.ts      selección propia en táctil
+    settings/             plugin.tsx        pestaña ajustes, datos y versión
 
   screens/
     ShelfScreen.tsx       portada: arrastrar, estantería, exportar
@@ -110,9 +109,16 @@ Decisiones conscientes:
   entero da CFIs vacíos. `readSelection` baja hasta el nodo de texto.
 - **Tres clics**: `range.selectNodeContents` no produce CFI útil; se normaliza
   descendiendo al primer/último nodo de texto.
-- **Táctil**: el menú de Android/iOS es UI del navegador, no se puede cerrar.
-  Solución: `user-select: none` + pulsación larga con `caretRangeFromPoint` y
-  pintado propio (`features/touch/selection.ts`). En escritorio no se activa.
+- **Táctil**: no se pelea con el navegador. La selección es la nativa (con sus
+  asas, que funcionan bien) y las opciones van en una barra **fija bajo la barra
+  superior** (`features/highlights/SelectionBar.tsx`), no flotando junto al
+  texto: el menú "Traducir / Copiar" de Android aparece pegado a la selección y
+  no se puede cerrar desde la página, así que cualquier panel flotante ahí choca
+  con él. `selectionchange` dispara durante el arrastre, de modo que la barra
+  aparece mientras se sombrea, no solo al soltar.
+- **El motor vive en un shadow root cerrado**: `document.querySelector` no lo
+  atraviesa. Para probar desde la consola, usa
+  `document.querySelector('foliate-view').renderer.getContents()`.
 - **PWA**: el service worker sirve caché; tras desplegar hace falta recarga
   dura o `autoUpdate` en la siguiente visita.
 - **Alto en tablet**: usar `100%` / `100svh`, nunca `100dvh` (la barra de Chrome
@@ -127,9 +133,6 @@ Decisiones conscientes:
   (el idioma no cambia). Reiniciar el dev server; no afecta al build.
 - **IndexedDB en tests**: `fake-indexeddb` + `resetIdb()`; los handles reales no
   son clonables, se prueba solo la lógica de permisos.
-- **El libro vive en un shadow root cerrado**: `document.querySelector` no lo
-  atraviesa. Para probar desde la consola, usa
-  `document.querySelector('foliate-view').renderer.getContents()`.
 
 ## 4. Convenciones
 

@@ -1,4 +1,5 @@
 .reader {
+  position: relative;
   display: grid;
   grid-template-rows: var(--topbar-h) minmax(0, 1fr) var(--status-h);
   height: 100dvh;

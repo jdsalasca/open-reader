@@ -1,8 +1,8 @@
 import { useReader } from '../../viewer/ReaderContext'
 import type { ViewerPlugin } from '../../viewer/plugins/types'
-import SelectionPopover from './SelectionPopover'
+import SelectionBar from './SelectionBar'
 
-/** The colour/style bar that appears over a selection or a clicked mark. */
+/** Las opciones aparecen en cuanto hay texto seleccionado o una marca abierta. */
 function HighlightOverlay() {
   const {
     selection,
@@ -23,10 +23,9 @@ function HighlightOverlay() {
   const chapter = annotation?.chapter ?? location?.chapter ?? ''
 
   return (
-    <SelectionPopover
+    <SelectionBar
       mode={annotation ? 'edit' : 'new'}
       annotation={annotation}
-      rect={active?.rect ?? selection!.rect}
       onApply={(patch) => {
         if (annotation) updateAnnotation(annotation.id, patch)
         else highlight(patch)

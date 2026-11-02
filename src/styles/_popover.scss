@@ -1,35 +1,81 @@
-.pop {
-  position: fixed;
-  z-index: 60;
-  display: grid;
+/* --- barra de anotar: fija bajo la barra superior ----------------------- */
+
+.selbar {
+  position: absolute;
+  top: calc(var(--topbar-h) + 8px);
+  left: 50%;
+  z-index: 12;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
-  width: 268px;
-  padding: 8px;
+  width: max-content;
+  max-width: min(96vw, 660px);
+  padding: 7px 9px;
   border: 1px solid var(--rule);
   border-radius: var(--r-md);
   background: var(--bg-2);
   box-shadow:
-    0 26px 52px -30px #000,
+    0 22px 44px -30px #000,
     0 0 0 1px var(--bg);
-  animation: pop-in 0.12s var(--ease);
+  transform: translateX(-50%);
+  animation: selbar-in 0.16s var(--ease);
 }
 
-@keyframes pop-in {
+@keyframes selbar-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    translate: 0 -8px;
   }
 }
 
-.pop__row {
+.selbar__group {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
-.pop__swatches {
-  justify-content: space-between;
-  padding: 2px 2px 5px;
+.selbar__rule {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 20px;
+  background: var(--rule-2);
+}
+
+/* el panel lateral no debe tapar la barra: se corre con el escenario */
+@media (min-width: 1025px) {
+  .reader.is-rail-open .selbar {
+    transform: translateX(calc(-50% + var(--rail-w) / 2));
+  }
+}
+
+@media (max-width: 720px) {
+  .selbar {
+    top: calc(var(--topbar-h) + 6px);
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 96vw;
+    padding: 5px 7px;
+  }
+
+  .selbar__rule {
+    display: none;
+  }
+
+  .selbar .swatch {
+    width: 27px;
+    height: 21px;
+  }
+
+  .selbar .style-btn {
+    width: 25px;
+    height: 25px;
+  }
+
+  .selbar__action {
+    padding: 5px 6px;
+  }
 }
 
 .swatch {
@@ -52,17 +98,11 @@
   }
 }
 
-.pop__styles {
-  padding: 6px 0;
-  border-top: 1px solid var(--rule-2);
-  border-bottom: 1px solid var(--rule-2);
-}
-
 .style-btn {
-  flex: 1;
   display: grid;
   place-items: center;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border: 1px solid transparent;
   border-radius: 2px;
   background: transparent;
@@ -80,25 +120,20 @@
   }
 }
 
-.pop__actions {
-  gap: 2px;
-}
-
-.pop__action {
-  flex: 1;
-  display: flex;
+.selbar__action {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 5px;
-  padding: 7px 4px;
+  padding: 6px 8px;
   border: 0;
-  border-radius: 2px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--ink-2);
   font-family: var(--f-mono);
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer;
 
   &:hover {
@@ -107,13 +142,27 @@
   }
 }
 
-.pop__action--danger:hover {
+.selbar__action--danger:hover {
   background: color-mix(in srgb, var(--danger) 12%, transparent);
   color: var(--danger);
 }
 
-.pop__action--close {
-  flex: 0 0 28px;
+.selbar__close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-3);
+    color: var(--ink);
+  }
 }
 
 /* --- note dialog -------------------------------------------------------- */

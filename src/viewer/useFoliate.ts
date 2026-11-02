@@ -18,7 +18,6 @@ import {
   type FoliateView,
 } from '../core/foliate'
 import { normalizeToc } from '../core/toc'
-import { enableTouchSelection } from '../features/touch/selection'
 
 export interface BookInfo {
   title: string
@@ -158,7 +157,6 @@ export function useFoliate(options: FoliateOptions) {
     if (!container || !file) return
 
     let disposed = false
-    const instrumented = new WeakSet<Document>()
     const view = createView()
     view.style.display = 'block'
     view.style.width = '100%'
@@ -202,8 +200,14 @@ export function useFoliate(options: FoliateOptions) {
       const first = rects[0]
       const last = rects[rects.length - 1]
       const frame = frameRectOf(doc)
+      let cfi = ''
+      try {
+        cfi = view.getCFI(index, normalized)
+      } catch {
+        return
+      }
       handlers.current.onSelection({
-        cfi: view.getCFI(index, normalized),
+        cfi,
         index,
         text: text.slice(0, 500),
         rect: {
@@ -229,23 +233,15 @@ export function useFoliate(options: FoliateOptions) {
       doc.addEventListener('pointerdown', () => handlers.current.onSelection(null))
       doc.addEventListener('pointerup', () => setTimeout(() => readSelection(doc, index), 10))
       doc.addEventListener('keyup', () => setTimeout(() => readSelection(doc, index), 10))
-      // en táctil el menú del sistema aparece antes que pointerup; con
-      // selectionchange la barra propia sale igual
+      // La selección es la del navegador (con sus asas, que funcionan muy bien).
+      // `selectionchange` se dispara mientras se arrastran, así que las opciones
+      // aparecen durante el sombreado y no solo al soltar.
       let settle = 0
       doc.addEventListener('selectionchange', () => {
         window.clearTimeout(settle)
-        settle = window.setTimeout(() => readSelection(doc, index), 260)
+        settle = window.setTimeout(() => readSelection(doc, index), 120)
       })
       doc.addEventListener('keydown', (event) => handlers.current.onKeyDown(event as KeyboardEvent))
-      // `any-pointer` cubre tablets con teclado o lápiz, donde el puntero
-      // principal puede reportarse como fino
-      if (window.matchMedia('(any-pointer: coarse)').matches && !instrumented.has(doc)) {
-        instrumented.add(doc)
-        enableTouchSelection(doc, {
-          onSelect: (range) => emitSelection(doc, index, range),
-          onClear: () => handlers.current.onSelection(null),
-        })
-      }
       requestAnimationFrame(() => redraw(index))
     }
 

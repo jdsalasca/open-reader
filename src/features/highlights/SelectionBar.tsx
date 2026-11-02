@@ -1,14 +1,11 @@
-import { useLayoutEffect, useRef, useState } from 'react'
 import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS } from '../../core/reading'
 import { Icon } from '../../components/Icons'
 import { useI18n } from '../../i18n'
-import type { Rect } from '../../viewer/useFoliate'
 import type { Annotation, HighlightColor, HighlightStyle } from '../../core/types'
 
 interface Props {
   mode: 'new' | 'edit'
   annotation: Annotation | null
-  rect: Rect
   onApply: (patch: { color?: HighlightColor; style?: HighlightStyle }) => void
   onNote: () => void
   onQuote: () => void
@@ -23,10 +20,16 @@ const STYLE_ICON: Record<HighlightStyle, { path: string; width: number; fill?: b
   strike: { path: 'M5 12h14M7 7h10M7 17h10', width: 1.4 },
 }
 
-export default function SelectionPopover({
+/**
+ * Barra de anotar: fija bajo la barra superior, no flotando sobre el texto.
+ *
+ * En móvil el menú nativo (Traducir/Copiar) sale pegado a la selección y no se
+ * puede cerrar desde la página; cualquier panel flotante ahí pelea con él. Fija
+ * arriba nunca choca y está siempre en el mismo sitio.
+ */
+export default function SelectionBar({
   mode,
   annotation,
-  rect,
   onApply,
   onNote,
   onQuote,
@@ -34,43 +37,12 @@ export default function SelectionPopover({
   onClose,
 }: Props) {
   const { t } = useI18n()
-  const ref = useRef<HTMLDivElement | null>(null)
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
   const color = annotation?.color ?? 'amber'
   const style = annotation?.style ?? 'highlight'
 
-  useLayoutEffect(() => {
-    const element = ref.current
-    if (!element) return
-    const { width, height } = element.getBoundingClientRect()
-    const margin = 12
-    const gap = 12
-    // en táctil el menú nativo de Android/iOS sale encima de la selección:
-    // nuestra barra va debajo para no pelearse con él
-    const coarse = window.matchMedia('(pointer: coarse)').matches
-    let left = rect.left + rect.width / 2 - width / 2
-    left = Math.max(margin, Math.min(left, window.innerWidth - width - margin))
-    let top = coarse ? rect.top + rect.height + gap : rect.top - height - gap
-    if (!coarse && top < margin) top = rect.top + rect.height + gap
-    if (top + height > window.innerHeight - margin) {
-      top = Math.max(margin, window.innerHeight - height - margin)
-    }
-    setPos({ left, top })
-  }, [rect, mode])
-
   return (
-    <div
-      ref={ref}
-      className="pop"
-      role="toolbar"
-      aria-label={t('reader.notes')}
-      style={{
-        left: pos?.left ?? rect.left,
-        top: pos?.top ?? rect.top,
-        visibility: pos ? 'visible' : 'hidden',
-      }}
-    >
-      <div className="pop__row pop__swatches">
+    <div className="selbar" role="toolbar" aria-label={t('reader.notes')}>
+      <div className="selbar__group">
         {COLOR_KEYS.map((key) => (
           <button
             key={key}
@@ -85,7 +57,9 @@ export default function SelectionPopover({
         ))}
       </div>
 
-      <div className="pop__row pop__styles">
+      <span className="selbar__rule" aria-hidden="true" />
+
+      <div className="selbar__group">
         {STYLE_KEYS.map((key) => (
           <button
             key={key}
@@ -96,7 +70,7 @@ export default function SelectionPopover({
             aria-pressed={style === key}
             onClick={() => onApply({ style: key })}
           >
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
               <path
                 d={STYLE_ICON[key].path}
                 fill={STYLE_ICON[key].fill ? 'currentColor' : 'none'}
@@ -110,30 +84,38 @@ export default function SelectionPopover({
         ))}
       </div>
 
-      <div className="pop__row pop__actions">
-        <button type="button" className="pop__action" onClick={onNote}>
-          <Icon name="note" size={16} />
+      <span className="selbar__rule" aria-hidden="true" />
+
+      <div className="selbar__group">
+        <button type="button" className="selbar__action" onClick={onNote}>
+          <Icon name="note" size={15} />
           {annotation?.note ? t('pop.editNote') : t('pop.note')}
         </button>
-        <button type="button" className="pop__action" onClick={onQuote}>
-          <Icon name="quote" size={16} />
+        <button type="button" className="selbar__action" onClick={onQuote}>
+          <Icon name="quote" size={15} />
           {t('pop.quote')}
         </button>
         {mode === 'edit' && onDelete && (
-          <button type="button" className="pop__action pop__action--danger" onClick={onDelete}>
-            <Icon name="trash" size={16} />
+          <button
+            type="button"
+            className="selbar__action selbar__action--danger"
+            onClick={onDelete}
+          >
+            <Icon name="trash" size={15} />
             {t('pop.delete')}
           </button>
         )}
-        <button
-          type="button"
-          className="pop__action pop__action--close"
-          onClick={onClose}
-          aria-label={t('pop.close')}
-        >
-          <Icon name="x" size={16} />
-        </button>
       </div>
+
+      <button
+        type="button"
+        className="selbar__close"
+        onClick={onClose}
+        aria-label={t('pop.close')}
+        title={t('pop.close')}
+      >
+        <Icon name="x" size={15} />
+      </button>
     </div>
   )
 }
