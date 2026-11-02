@@ -77,6 +77,8 @@ export interface ReaderStore {
   /** The mark the reader clicked on the page, with its on-screen rect. */
   active: { annotation: Annotation; rect: Rect } | null
   annotations: Annotation[]
+  /** Opens a mark's options without clicking its text (post-it tabs). */
+  activate(annotation: Annotation): void
 
   addAnnotation(annotation: Annotation): void
   updateAnnotation(id: string, patch: Partial<Annotation>): void

@@ -13,6 +13,12 @@ export const HIGHLIGHT_COLORS: Record<
 
 export const COLOR_KEYS = Object.keys(HIGHLIGHT_COLORS) as HighlightColor[]
 
+/** Los post-it son papel de color, no un resaltado: tono propio y más vivo. */
+export const STICKY_COLORS: Record<'yellow' | 'purple', string> = {
+  yellow: '#f3d34a',
+  purple: '#b58ce0',
+}
+
 export const HIGHLIGHT_STYLES: Record<HighlightStyle, string> = {
   highlight: 'Resaltado',
   underline: 'Subrayado',

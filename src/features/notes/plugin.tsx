@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '../../components/Icons'
-import { HIGHLIGHT_COLORS } from '../../core/reading'
+import { HIGHLIGHT_COLORS, STICKY_COLORS } from '../../core/reading'
 import { relativeTime } from '../../core/format'
 import { useI18n } from '../../i18n'
 import { useReader } from '../../viewer/ReaderContext'
@@ -44,13 +44,18 @@ function NotesPanel() {
           <li key={item.id} className="mark">
             <button type="button" className="mark__body" onClick={() => goTo(item.cfi)}>
               <span
-                className="mark__swatch"
-                style={{ background: HIGHLIGHT_COLORS[item.color].hex }}
+                className={`mark__swatch${item.sticky ? ' mark__swatch--sticky' : ''}`}
+                style={{
+                  background: item.sticky
+                    ? STICKY_COLORS[item.sticky]
+                    : HIGHLIGHT_COLORS[item.color].hex,
+                }}
               />
               <span className="mark__text">
                 <q>{item.text}</q>
                 {item.note && <span className="mark__note">{item.note}</span>}
                 <span className="mark__meta">
+                  {item.sticky && <b className="mark__tag">{t('sticky.label')}</b>}
                   {item.quoted && <b className="mark__star">★ {t('quote.title')}</b>}
                   {item.chapter || t('search.noChapter')} · {relativeTime(item.createdAt, locale)}
                 </span>

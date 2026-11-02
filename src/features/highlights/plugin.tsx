@@ -1,9 +1,11 @@
 import { useReader } from '../../viewer/ReaderContext'
 import type { ViewerPlugin } from '../../viewer/plugins/types'
 import SelectionBar from './SelectionBar'
+import { useI18n } from '../../i18n'
 
 /** Las opciones aparecen en cuanto hay texto seleccionado o una marca abierta. */
 function HighlightOverlay() {
+  const { t } = useI18n()
   const {
     selection,
     active,
@@ -14,6 +16,7 @@ function HighlightOverlay() {
     deleteAnnotation,
     openNote,
     openQuote,
+    flash,
   } = useReader()
 
   if (!active && !selection) return null
@@ -33,14 +36,17 @@ function HighlightOverlay() {
       onNote={() =>
         openNote({ id: annotation?.id, quote: text, initial: annotation?.note ?? '' })
       }
-      onSticky={(sticky) =>
-        openNote({
-          id: annotation?.id,
-          quote: text,
-          initial: annotation?.note ?? '',
-          sticky,
-        })
-      }
+      onSticky={(sticky) => {
+        // un post-it no pide texto: se pega y ya
+        if (annotation) {
+          updateAnnotation(annotation.id, {
+            sticky: annotation.sticky === sticky ? undefined : sticky,
+          })
+          flash(t(annotation.sticky === sticky ? 'sticky.removed' : 'sticky.added'))
+        } else if (highlight({ sticky })) {
+          flash(t('sticky.added'))
+        }
+      }}
       onQuote={() =>
         openQuote({
           id: annotation?.id,

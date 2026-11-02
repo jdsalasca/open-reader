@@ -214,6 +214,8 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
     selection,
     active,
     annotations,
+    activate: (annotation) =>
+      setActive({ annotation, rect: { left: 0, top: 0, width: 0, height: 0 } }),
 
     addAnnotation(annotation) {
       setAnnotations((list) => [...list, annotation])

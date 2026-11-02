@@ -382,6 +382,29 @@
   }
 }
 
+/* el post-it asoma por el borde de la hoja, como el papelito de verdad */
+.postit-tab {
+  position: absolute;
+  right: 0;
+  width: 11px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px 0 0 2px;
+  background: var(--sticky-yellow);
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: -1px 1px 3px -1px rgba(0, 0, 0, 0.45);
+
+  &:hover {
+    width: 15px;
+  }
+}
+
+.postit-tab--purple {
+  background: var(--sticky-purple);
+}
+
 /* --- botón de instalación --- */
 .install {
   position: relative;
