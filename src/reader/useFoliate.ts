@@ -18,6 +18,7 @@ import {
   type FoliateView,
 } from '../lib/foliate'
 import { normalizeToc } from '../lib/toc'
+import { enableTouchSelection } from './touch/selection'
 
 export interface BookInfo {
   title: string
@@ -232,6 +233,17 @@ export function useFoliate(options: FoliateOptions) {
         settle = window.setTimeout(() => readSelection(doc, index), 260)
       })
       doc.addEventListener('keydown', (event) => handlers.current.onKeyDown(event as KeyboardEvent))
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        enableTouchSelection(doc, {
+          onSelect: (range) => {
+            const selection = doc.getSelection()
+            selection?.removeAllRanges()
+            selection?.addRange(range)
+            readSelection(doc, index)
+          },
+          onClear: () => handlers.current.onSelection(null),
+        })
+      }
       requestAnimationFrame(() => redraw(index))
     }
 
