@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import type { BookInfo } from './useFoliate'
-import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS } from '../lib/reading'
-import { percent, relativeTime, bytes } from '../lib/format'
-import { useI18n } from '../i18n'
-import { storageEstimate } from '../lib/storage'
-import { Icon } from '../components/Icons'
-import type { Annotation, LocationInfo, Settings, TocItem } from '../lib/types'
+import type { BookInfo } from '../../viewer/useFoliate'
+import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS } from '../../core/reading'
+import { percent, relativeTime, bytes } from '../../core/format'
+import { useI18n } from '../../i18n/index'
+import { storageEstimate } from '../../core/storage'
+import { Icon } from '../../components/Icons'
+import type { Annotation, LocationInfo, Settings, TocItem } from '../../core/types'
 
 export type PanelTab = 'toc' | 'search' | 'notes' | 'marks' | 'settings'
 

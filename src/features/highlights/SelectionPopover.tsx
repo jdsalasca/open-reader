@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { COLOR_KEYS, HIGHLIGHT_COLORS, HIGHLIGHT_STYLES, STYLE_KEYS } from '../lib/reading'
-import { Icon } from '../components/Icons'
-import type { Rect } from './useFoliate'
-import type { Annotation, HighlightColor, HighlightStyle } from '../lib/types'
+import { COLOR_KEYS, HIGHLIGHT_COLORS, HIGHLIGHT_STYLES, STYLE_KEYS } from '../../core/reading'
+import { Icon } from '../../components/Icons'
+import type { Rect } from '../../viewer/useFoliate'
+import type { Annotation, HighlightColor, HighlightStyle } from '../../core/types'
 
 interface Props {
   mode: 'new' | 'edit'

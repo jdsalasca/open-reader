@@ -1,22 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Sidebar, { type PanelTab, type SearchState } from './Sidebar'
-import SelectionPopover from './SelectionPopover'
-import NoteDialog from './NoteDialog'
-import QuoteDialog from './QuoteDialog'
-import MarginNotes from './MarginNotes'
-import { useFoliate, type BookInfo, type Rect } from './useFoliate'
-import { useI18n } from '../i18n'
+import Sidebar, { type PanelTab, type SearchState } from './BookPanel'
+import SelectionPopover from '../../features/highlights/SelectionPopover'
+import NoteDialog from '../../features/notes/NoteDialog'
+import QuoteDialog from '../../features/quotes/QuoteDialog'
+import MarginNotes from '../../features/notes/MarginNotes'
+import { useFoliate, type BookInfo, type Rect } from '../../viewer/useFoliate'
+import { useI18n } from '../../i18n/index'
 import {
   exportBackup,
   importBackup,
   loadBook,
   saveBook,
   touchLibrary,
-} from '../lib/storage'
-import { bookToMarkdown } from '../lib/exportMarkdown'
-import { formatOf, titleFromName } from '../lib/book'
-import { downloadText, percent, uid } from '../lib/format'
-import { Icon } from '../components/Icons'
+} from '../../core/storage'
+import { bookToMarkdown } from '../../core/exportMarkdown'
+import { formatOf, titleFromName } from '../../core/book'
+import { downloadText, percent, uid } from '../../core/format'
+import { Icon } from '../../components/Icons'
 import type {
   Annotation,
   BookMeta,
@@ -27,7 +27,7 @@ import type {
   LocationInfo,
   SelectionInfo,
   Settings,
-} from '../lib/types'
+} from '../../core/types'
 
 const EMPTY_PROGRESS: BookProgress = { cfi: '', fraction: 0, chapter: '' }
 

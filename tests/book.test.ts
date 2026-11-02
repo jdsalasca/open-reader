@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { fileId, formatOf, titleFromName } from '../src/lib/book'
-import { bookStyles } from '../src/lib/reading'
-import { DEFAULT_SETTINGS } from '../src/lib/storage'
+import { fileId, formatOf, titleFromName } from '../src/core/book'
+import { bookStyles } from '../src/core/reading'
+import { DEFAULT_SETTINGS } from '../src/core/storage'
 
 describe('formatOf', () => {
   it('maps extensions to reader labels', () => {

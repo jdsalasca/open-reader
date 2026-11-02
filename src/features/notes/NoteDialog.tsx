@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Icon } from '../components/Icons'
-import { useI18n } from '../i18n'
+import { Icon } from '../../components/Icons'
+import { useI18n } from '../../i18n/index'
 
 interface Props {
   open: boolean

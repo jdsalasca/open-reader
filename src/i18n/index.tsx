@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo } from 'react'
 import { es, type MessageKey } from './es'
 import { en } from './en'
 import { zh } from './zh'
-import type { LanguageSetting, Locale } from '../lib/types'
+import type { LanguageSetting, Locale } from '../core/types'
 
 export const DICTS: Record<Locale, Record<MessageKey, string>> = { es, en, zh }
 

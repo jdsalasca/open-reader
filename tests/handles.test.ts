@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { fileFromHandle, forgetFile, rememberFile } from '../src/lib/handles'
-import { resetIdb } from '../src/lib/idb'
+import { fileFromHandle, forgetFile, rememberFile } from '../src/core/handles'
+import { resetIdb } from '../src/core/idb'
 
 // IndexedDB clones values structurally, so a real handle cannot be faked with
 // functions. These tests cover the permission dance, which is the part that

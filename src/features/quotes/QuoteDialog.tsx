@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { drawQuoteCard, downloadCanvas } from '../lib/quoteCard'
-import { useI18n } from '../i18n'
-import { Icon } from '../components/Icons'
-import type { HighlightColor } from '../lib/types'
+import { drawQuoteCard, downloadCanvas } from '../../core/quoteCard'
+import { useI18n } from '../../i18n/index'
+import { Icon } from '../../components/Icons'
+import type { HighlightColor } from '../../core/types'
 
 interface Props {
   open: boolean

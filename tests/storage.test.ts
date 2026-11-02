@@ -12,9 +12,9 @@ import {
   saveBook,
   saveSettings,
   touchLibrary,
-} from '../src/lib/storage'
-import { resetIdb } from '../src/lib/idb'
-import type { BookRecord } from '../src/lib/types'
+} from '../src/core/storage'
+import { resetIdb } from '../src/core/idb'
+import type { BookRecord } from '../src/core/types'
 
 const meta: BookRecord['meta'] = {
   id: 'abc123',

@@ -1,9 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { HIGHLIGHT_COLORS } from '../lib/reading'
-import { relativeTime } from '../lib/format'
-import { useI18n } from '../i18n'
-import { Icon } from '../components/Icons'
-import type { Annotation } from '../lib/types'
+import { HIGHLIGHT_COLORS } from '../../core/reading'
+import { relativeTime } from '../../core/format'
+import { useI18n } from '../../i18n/index'
+import { Icon } from '../../components/Icons'
+import type { Annotation } from '../../core/types'
 
 interface Props {
   annotations: Annotation[]

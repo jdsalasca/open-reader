@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useI18n } from '../i18n'
-import { Icon } from '../components/Icons'
+import { useI18n } from '../i18n/index'
+import { Icon } from './Icons'
 
 interface InstallEvent extends Event {
   prompt: () => Promise<void>

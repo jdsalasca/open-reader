@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { cleanTocLabel } from '../src/lib/toc'
-import { bookToMarkdown } from '../src/lib/exportMarkdown'
-import type { Annotation, BookRecord } from '../src/lib/types'
+import { cleanTocLabel } from '../src/core/toc'
+import { bookToMarkdown } from '../src/core/exportMarkdown'
+import type { Annotation, BookRecord } from '../src/core/types'
 
 describe('cleanTocLabel', () => {
   it('drops the first sentence when the label ends in a chapter marker', () => {

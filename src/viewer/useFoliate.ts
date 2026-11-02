@@ -6,9 +6,9 @@ import type {
   Settings,
   ThemeMode,
   TocItem,
-} from '../lib/types'
-import { bookStyles } from '../lib/reading'
-import { drawAnnotation, searchDraw, searchDrawOptions } from '../lib/mark'
+} from '../core/types'
+import { bookStyles } from '../core/reading'
+import { drawAnnotation, searchDraw, searchDrawOptions } from '../core/mark'
 import {
   bookAuthor,
   bookTitle,
@@ -16,9 +16,9 @@ import {
   toLocation,
   type FoliateLocation,
   type FoliateView,
-} from '../lib/foliate'
-import { normalizeToc } from '../lib/toc'
-import { enableTouchSelection } from './touch/selection'
+} from '../core/foliate'
+import { normalizeToc } from '../core/toc'
+import { enableTouchSelection } from '../features/touch/selection'
 
 export interface BookInfo {
   title: string

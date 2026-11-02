@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import ReaderScreen from './reader/ReaderScreen'
-import ShelfScreen from './shelf/ShelfScreen'
+import ReaderScreen from './screens/reader/ReaderScreen'
+import ShelfScreen from './screens/ShelfScreen'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { fileId } from './lib/book'
+import { fileId } from './core/book'
 import {
   exportBackup,
   importBackup,
@@ -12,12 +12,12 @@ import {
   removeFromLibrary,
   requestPersistence,
   saveSettings,
-} from './lib/storage'
-import { forgetFile, rememberFile, reopenBook } from './lib/handles'
-import { downloadText } from './lib/format'
-import { I18nProvider, resolveLocale, translate } from './i18n'
+} from './core/storage'
+import { forgetFile, rememberFile, reopenBook } from './core/handles'
+import { downloadText } from './core/format'
+import { I18nProvider, resolveLocale, translate } from './i18n/index'
 import type { MessageKey } from './i18n/es'
-import type { BookRecord, LibraryEntry, Settings } from './lib/types'
+import type { BookRecord, LibraryEntry, Settings } from './core/types'
 
 interface Session {
   id: string

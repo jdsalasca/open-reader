@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react'
-import { useI18n } from '../i18n'
+import { useI18n } from '../i18n/index'
 
 interface BoundaryProps {
   fallback: (reset: () => void) => ReactNode
