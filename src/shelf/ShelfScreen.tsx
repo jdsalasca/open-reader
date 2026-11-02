@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ACCEPTED } from '../lib/book'
 import { pickBookWithHandle, supportsHandles } from '../lib/handles'
 import { DONATE_URL, REPO_URL } from '../lib/links'
+import { APP_VERSION } from '../lib/version'
 import { relativeTime, percent } from '../lib/format'
 import { LOCALES, LOCALE_LABEL, useI18n } from '../i18n'
 import type { MessageKey } from '../i18n/es'
@@ -333,7 +334,7 @@ export default function ShelfScreen({
 
           <div className="shelf__sign">
             <span className="shelf__sign-mark" aria-hidden="true" />
-            <span>OPEN READER</span>
+            <span>OPEN READER v{APP_VERSION}</span>
             <span className="shelf__sign-sep">·</span>
             <a href={DONATE_URL} target="_blank" rel="noreferrer noopener">
               <Icon name="heart-filled" size={11} /> {t('shelf.support')}
