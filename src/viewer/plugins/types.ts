@@ -26,6 +26,8 @@ export interface ViewerPlugin {
   tab?: PanelTab
   /** Rendered next to the page, inside the stage (the margin). */
   Aside?: ComponentType
+  /** Rendered over the page itself, inside the sheet (comment bubbles). */
+  Page?: ComponentType
   /** Rendered over the reader: popovers and dialogs. */
   Overlay?: ComponentType
   /** Keyboard shortcut. Return true when the key was handled. */

@@ -328,6 +328,60 @@
   line-height: 1.45;
 }
 
+/* --- burbujas de comentario sobre la página --- */
+.comments {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.comment-bubble {
+  position: absolute;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 28px;
+  height: 20px;
+  padding: 0 6px 0 5px;
+  border: 1px solid var(--accent);
+  border-radius: 10px 10px 10px 2px;
+  background: var(--bg-2);
+  color: var(--accent);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: 0 2px 6px -3px rgba(0, 0, 0, 0.55);
+  transition:
+    transform 0.12s var(--ease),
+    background 0.12s var(--ease);
+
+  &:hover {
+    background: var(--accent);
+    color: var(--on-accent);
+    transform: translateX(-2px);
+  }
+}
+
+@media (max-width: 720px) {
+  .comment-bubble {
+    right: 0;
+    min-width: 26px;
+    height: 20px;
+    padding: 0 4px;
+    gap: 2px;
+
+    svg {
+      width: 9px;
+      height: 9px;
+    }
+  }
+}
+
 /* --- botón de instalación --- */
 .install {
   position: relative;

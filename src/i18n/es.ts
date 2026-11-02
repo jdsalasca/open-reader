@@ -146,6 +146,7 @@ export const es = {
   'pop.close': 'Cerrar',
   'sticky.yellow': "Nota amarilla",
   'sticky.purple': "Nota morada",
+  'comments.bubble': "Comentario {n}",
   'color.amber': 'Ámbar',
   'color.rust': 'Óxido',
   'color.sage': 'Salvia',

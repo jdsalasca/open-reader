@@ -146,6 +146,7 @@ export const en: Record<MessageKey, string> = {
   'pop.close': 'Close',
   'sticky.yellow': "Yellow note",
   'sticky.purple': "Purple note",
+  'comments.bubble': "Comment {n}",
   'color.amber': 'Amber',
   'color.rust': 'Rust',
   'color.sage': 'Sage',

@@ -138,7 +138,25 @@ Decisiones conscientes:
 - **IndexedDB en tests**: `fake-indexeddb` + `resetIdb()`; los handles reales no
   son clonables, se prueba solo la lógica de permisos.
 
-## 4. Convenciones
+## 4. Visión: libros colaborativos
+
+El lector está pensado para que un libro sea un espacio compartido, no un
+archivo privado. Nada de eso está implementado todavía, pero el código no lo
+estorba:
+
+- **Los comentarios ya son datos con ancla.** Una `Annotation` guarda CFI,
+  índice, texto, nota y fecha. Añadir `author` y `likes` es un campo, no un
+  rediseño.
+- **Las burbujas de comentario son una capa aparte** (`CommentBubbles`, slot
+  `Page` del plugin de notas). Hoy leen las anotaciones locales del store; el día
+  que existan las remotas, se mezclan en la misma lista y no hay que tocar el
+  dibujo.
+- **El «me gusta» ya existe** como `liked` en la anotación, hoy local.
+- Lo que faltaría para el salto: identidad (sin cuentas no hay autor fiable),
+  sincronización (un servidor o un CRDT) y moderación. Nada de eso debe meterse
+  en `core/`, que hoy no sabe de red.
+
+## 5. Convenciones
 
 - Versión en `src/core/version.ts` y `package.json`; se muestra en el pie.
 - Todo texto de UI pasa por `t('clave')` y existe en los tres diccionarios
@@ -148,7 +166,7 @@ Decisiones conscientes:
   (`paper` / `industrial`) resueltas por variables y `_decor.scss`.
 - Commits atómicos en imperativo; cada paso del refactor deja la app funcionando.
 
-## 5. Verificación
+## 6. Verificación
 
 ```bash
 npx tsc --noEmit && npm test && npm run build

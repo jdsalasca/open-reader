@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Icon } from '../../components/Icons'
 import { HIGHLIGHT_COLORS } from '../../core/reading'
 import { relativeTime } from '../../core/format'
@@ -8,6 +8,8 @@ import type { Annotation } from '../../core/types'
 import type { ViewerPlugin } from '../../viewer/plugins/types'
 import MarginNotes from './MarginNotes'
 import NoteDialog from './NoteDialog'
+import CommentBubbles from './CommentBubbles'
+import { useMarkAnchors } from './useMarkAnchors'
 
 export const NOTES_TAB = 'notes'
 
@@ -118,15 +120,10 @@ function NotesAction() {
 
 /** The margin column: only for the section on screen, only if enabled. */
 function MarginAside() {
-  const { settings, location, annotations, markAnchors, goTo, updateAnnotation, deleteAnnotation } =
+  const { settings, location, annotations, goTo, updateAnnotation, deleteAnnotation } =
     useReader()
+  const anchors = useMarkAnchors()
   const [collapsed, setCollapsed] = useState(false)
-  const [anchors, setAnchors] = useState<Record<string, number>>({})
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setAnchors(markAnchors()), 120)
-    return () => window.clearTimeout(timer)
-  }, [location?.cfi, annotations, markAnchors])
 
   if (!settings.marginNotes) return null
 
@@ -173,6 +170,7 @@ export const notesPlugin: ViewerPlugin = {
   id: 'notes',
   Action: NotesAction,
   Aside: MarginAside,
+  Page: CommentBubbles,
   Overlay: NoteOverlay,
   tab: {
     id: NOTES_TAB,

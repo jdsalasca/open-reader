@@ -1,7 +1,7 @@
 {
   "name": "open-reader",
   "private": true,
-  "version": "0.3.3",
+  "version": "1.0.0",
   "type": "module",
   "description": "Lector de EPUB, MOBI y PDF en el navegador con notas, resaltados y marcadores. Sin cuentas, sin servidor.",
   "scripts": {

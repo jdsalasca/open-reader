@@ -402,6 +402,9 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
               }
             >
               <div className="stage__view" ref={foliate.containerRef} />
+              {registry.pages.map((Page, index) => (
+                <Page key={index} />
+              ))}
               {!ready && !error && (
                 <div className="stage__loading">
                   <span className="spinner" aria-hidden="true" />

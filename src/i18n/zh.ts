@@ -142,6 +142,7 @@ export const zh: Record<MessageKey, string> = {
   'pop.close': '关闭',
   'sticky.yellow': "黄色便签",
   'sticky.purple': "紫色便签",
+  'comments.bubble': "评论 {n}",
   'color.amber': '琥珀',
   'color.rust': '赭红',
   'color.sage': '鼠尾草',
