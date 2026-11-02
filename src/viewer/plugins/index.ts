@@ -5,6 +5,7 @@ import { quotesPlugin } from '../../features/quotes/plugin'
 import { searchPlugin } from '../../features/search/plugin'
 import { settingsPlugin } from '../../features/settings/plugin'
 import { tocPlugin } from '../../features/toc/plugin'
+import { wakePlugin } from '../../features/wake/plugin'
 import type { ViewerPlugin } from './types'
 
 /**
@@ -19,4 +20,5 @@ export const plugins: ViewerPlugin[] = [
   settingsPlugin,
   highlightsPlugin,
   quotesPlugin,
+  wakePlugin,
 ]

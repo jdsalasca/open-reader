@@ -116,6 +116,11 @@ export const en: Record<MessageKey, string> = {
   'settings.column': 'Column width',
   'settings.justify': 'Justify text',
   'settings.hyphens': 'Hyphenate',
+  'wake.title': "Keep the screen on",
+  'wake.on': "Screen stays on",
+  'wake.off': "The screen can sleep again",
+  'settings.keepAwake': "Keep the screen on",
+  'settings.keepAwakeHint': "Stops the tablet or phone from turning the screen off while you read. Uses more battery.",
   'settings.annotations': 'Annotations',
   'settings.margin': 'Margin notes',
   'settings.marginHint':

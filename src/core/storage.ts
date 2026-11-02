@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: Settings = {
   marginNotes: true,
   language: 'auto',
   railOpen: true,
+  keepAwake: false,
   version: 2,
 }
 

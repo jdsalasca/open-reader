@@ -4,6 +4,7 @@ import { Icon } from '../../components/Icons'
 import { highlightFrom } from '../../core/annotation'
 import { formatOf } from '../../core/book'
 import { loadBook, saveBook, touchLibrary } from '../../core/storage'
+import { keepScreenAwake } from '../../core/wakeLock'
 import type {
   Annotation,
   BookMeta,
@@ -178,6 +179,9 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
     document.addEventListener('fullscreenchange', handler)
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
+
+  // El ojito de la barra: mantiene la pantalla encendida mientras se lee.
+  useEffect(() => keepScreenAwake(settings.keepAwake), [settings.keepAwake])
 
   const openPanel = (tab?: string) => {
     setPanel((current) => ({ open: true, tab: tab ?? current.tab }))

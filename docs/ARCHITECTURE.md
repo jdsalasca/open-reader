@@ -116,6 +116,10 @@ Decisiones conscientes:
   no se puede cerrar desde la página, así que cualquier panel flotante ahí choca
   con él. `selectionchange` dispara durante el arrastre, de modo que la barra
   aparece mientras se sombrea, no solo al soltar.
+- **Pantalla encendida**: la Screen Wake Lock se suelta sola cuando la pestaña
+  pasa a segundo plano, así que `core/wakeLock.ts` la vuelve a pedir al regresar
+  (`visibilitychange`). Sin HTTPS no se concede y en navegadores viejos el botón
+  ni aparece.
 - **El motor vive en un shadow root cerrado**: `document.querySelector` no lo
   atraviesa. Para probar desde la consola, usa
   `document.querySelector('foliate-view').renderer.getContents()`.

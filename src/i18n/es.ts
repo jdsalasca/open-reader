@@ -116,6 +116,11 @@ export const es = {
   'settings.column': 'Ancho de columna',
   'settings.justify': 'Justificar texto',
   'settings.hyphens': 'Partir palabras',
+  'wake.title': "Mantener la pantalla encendida",
+  'wake.on': "Pantalla siempre encendida",
+  'wake.off': "La pantalla puede apagarse",
+  'settings.keepAwake': "Pantalla siempre encendida",
+  'settings.keepAwakeHint': "Evita que la tablet o el celular apaguen la pantalla mientras lees. Gasta más batería.",
   'settings.annotations': 'Anotaciones',
   'settings.margin': 'Notas al margen',
   'settings.marginHint':

@@ -90,6 +90,8 @@ export interface Settings {
   version: number
   /** Left rail visible; kept across sessions. */
   railOpen: boolean
+  /** Keeps the screen awake while reading (Screen Wake Lock). */
+  keepAwake: boolean
 }
 
 export interface LocationInfo {

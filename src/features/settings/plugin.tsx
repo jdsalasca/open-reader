@@ -170,6 +170,12 @@ function SettingsPanel() {
           checked={settings.hyphens}
           onChange={(hyphens) => patchSettings({ hyphens })}
         />
+        <Toggle
+          label={t('settings.keepAwake')}
+          checked={settings.keepAwake}
+          onChange={(keepAwake) => patchSettings({ keepAwake })}
+          hint={t('settings.keepAwakeHint')}
+        />
       </section>
 
       <section className="panel__group">
