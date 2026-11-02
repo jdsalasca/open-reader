@@ -43,10 +43,13 @@ export default function SelectionPopover({
     const { width, height } = element.getBoundingClientRect()
     const margin = 12
     const gap = 12
+    // en táctil el menú nativo de Android/iOS sale encima de la selección:
+    // nuestra barra va debajo para no pelearse con él
+    const coarse = window.matchMedia('(pointer: coarse)').matches
     let left = rect.left + rect.width / 2 - width / 2
     left = Math.max(margin, Math.min(left, window.innerWidth - width - margin))
-    let top = rect.top - height - gap
-    if (top < margin) top = rect.top + rect.height + gap
+    let top = coarse ? rect.top + rect.height + gap : rect.top - height - gap
+    if (!coarse && top < margin) top = rect.top + rect.height + gap
     if (top + height > window.innerHeight - margin) {
       top = Math.max(margin, window.innerHeight - height - margin)
     }
