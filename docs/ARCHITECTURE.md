@@ -1,104 +1,106 @@
-# Arquitectura y traspaso
+# Arquitectura
 
-Estado del proyecto, hacia dónde va y las trampas ya resueltas. Sirve como
-punto de partida para refactorizar sin volver a descubrir nada.
+Cómo está montado Open Reader, por qué las capas están separadas así y las
+trampas que ya costaron tiempo. Si vas a tocar el visor, lee esto primero.
 
-## 1. Qué hay hoy
-
-```
-src/
-  lib/            lógica sin React
-    types.ts        Annotation, BookRecord, Settings, Locale…
-    storage.ts      IndexedDB (libros, handles) + localStorage (ajustes, estantería) + migraciones
-    idb.ts          wrapper mínimo de IndexedDB
-    handles.ts      File System Access: reabrir con un clic
-    book.ts         id del libro (SHA-256), formatos, título desde el nombre
-    reading.ts      CSS que se inyecta en el libro (tema, fuentes, tipografía)
-    mark.ts         dibujo de resaltados (Overlayer) y estilo de búsqueda
-    quoteCard.ts    tarjeta de cita 1200×800 en canvas
-    exportMarkdown.ts
-    toc.ts          normalización del índice
-    foliate.ts      tipos del motor + helpers (título, autor, TOC)
-    format.ts       percent, bytes, relativeTime, downloadText
-    links.ts        DONATE_URL, REPO_URL
-    version.ts      APP_VERSION (0.0.1)
-  i18n/           es / en / zh + provider
-  reader/
-    ReaderScreen.tsx    orquestador: estado, layout, atajos
-    useFoliate.ts       ciclo de vida del motor, anotaciones, búsqueda, anchors
-    Sidebar.tsx         panel (índice, buscar, notas, marcas, ajustes)
-    MarginNotes.tsx     notas al margen + burbujas
-    SelectionPopover.tsx
-    NoteDialog.tsx / QuoteDialog.tsx
-    touch/selection.ts  selección propia en táctil
-  shelf/          portada
-  components/     Icons, ErrorBoundary, InstallButton
-  styles/         SCSS: tokens, base, shelf, reader, panels, gutter, popover, crash, decor
-  vendor/foliate/ motor con 3 parches (ver README)
-```
-
-## 2. Hacia dónde va
+## 1. Capas
 
 ```
 src/
-  core/           sin React ni UI
-    book/         apertura, CFI, metadatos, TOC
-    storage/      IndexedDB + localStorage + migraciones
-    i18n/
-  viewer/         el motor, un solo componente
-    BookViewer.tsx
-    plugins/
-      types.ts    contrato
-      registry.ts
-  features/       cada cosa que se “engancha” al visor
-    annotations/  resaltados y estilos
-    notes/        margen y burbujas
-    quotes/       tarjeta de cita
-    bookmarks/
-    search/
-    touch/        selección táctil
-  ui/             Button, Dialog, Segmented, Slider, Toggle
-  screens/        Shelf, Reader
+  core/                 lógica pura: sin React, sin DOM de la app
+    types.ts              Annotation, BookRecord, Settings, Locale…
+    storage.ts            IndexedDB (libros, handles) + localStorage (ajustes,
+                          estantería) + migraciones
+    idb.ts                wrapper mínimo de IndexedDB
+    handles.ts            File System Access: reabrir con un clic
+    book.ts               id del libro (SHA-256), formatos, título del archivo
+    annotation.ts         fábricas: highlightFrom(), bookmarkFrom()
+    reading.ts            CSS que se inyecta dentro del libro
+    mark.ts               dibujo de resaltados y estilo de búsqueda
+    quoteCard.ts          tarjeta de cita 1200×800 en canvas
+    exportMarkdown.ts     notas → Markdown
+    toc.ts                normalización del índice
+    foliate.ts            tipos del motor + helpers
+    format.ts             percent, bytes, relativeTime, slug, downloadText
+    links.ts / version.ts URL de donación y APP_VERSION
+
+  i18n/                 es / en / zh + provider (MessageKey obliga a traducir)
+  viewer/
+    useFoliate.ts         ciclo de vida del motor: abrir, layout, anotaciones,
+                          búsqueda, selección (ratón y táctil), anclas del margen
+    ReaderContext.tsx     ReaderStore + useReader(): el estado de la sesión
+    plugins/types.ts      contrato ViewerPlugin y PanelTab
+    plugins/registry.ts   createRegistry(): huecos, orden y atajos
+    plugins/index.ts      la lista de plugins = el lector
+
+  features/             una carpeta por función, cada una un plugin
+    toc/                  plugin.tsx        pestaña índice
+    search/               plugin.tsx        pestaña buscar
+    notes/                plugin.tsx        pestaña + margen + diálogo de nota
+                          MarginNotes.tsx   tarjetas y burbujas
+                          NoteDialog.tsx
+    highlights/           plugin.tsx        barra de colores sobre la selección
+                          SelectionPopover.tsx
+    quotes/               plugin.tsx        tarjeta de cita
+                          QuoteDialog.tsx
+    bookmarks/            plugin.tsx        botón, atajo b y pestaña marcas
+    settings/             plugin.tsx        pestaña ajustes y datos
+    touch/                selection.ts      selección propia en táctil
+
+  screens/
+    ShelfScreen.tsx       portada: arrastrar, estantería, exportar
+    reader/ReaderScreen.tsx  orquesta: estado, persistencia, atajos, layout
+    reader/TopBar.tsx     barra superior (acciones de plugins + chrome)
+    reader/BookPanel.tsx  panel lateral (pestañas del registro)
+    reader/StatusBar.tsx  progreso y navegación
+
+  ui/                   Segmented, Slider, Toggle, Dialog
+  components/           Icons, ErrorBoundary, InstallButton
+  styles/               SCSS con tokens; dos personalidades
+  vendor/foliate/       motor con 3 parches (ver README)
 ```
 
-### Contrato del plugin
+**Regla de dependencias:** `features` y `screens` pueden importar de `viewer`,
+`ui`, `core` e `i18n`. `viewer` importa de `core`. `core` no importa de nadie.
+Ninguna feature importa de otra.
+
+## 2. Cómo funciona un plugin
 
 ```ts
-export interface ViewerApi {
-  readonly book: BookInfo
-  getContents(): { doc: Document; index: number }[]
-  getCFI(index: number, range: Range): string
-  addMark(annotation: Annotation): Promise<void>
-  removeMark(annotation: Annotation): Promise<void>
-  goTo(target: string | number): Promise<void>
-}
-
 export interface ViewerPlugin {
   id: string
-  setup(view: ViewerApi): void
-  onLoad?(section: { index: number; doc: Document }): void
-  onSelection?(selection: SelectionInfo | null): void
-  onRelocate?(location: LocationInfo): void
-  onDraw?(annotation: Annotation, draw: DrawFn): void
-  destroy(): void
+  Action?: ComponentType   // botón en la barra superior
+  tab?: PanelTab           // pestaña del panel: { id, label, count?, Panel }
+  Aside?: ComponentType    // UI junto a la página (el margen)
+  Overlay?: ComponentType  // UI flotante (popover, diálogos)
+  onKey?: (store: ReaderStore, event: KeyboardEvent) => boolean
 }
 ```
 
-Registro: `createRegistry([annotationsPlugin, notesPlugin, …])` y `BookViewer`
-recibe `plugins` por props. `useFoliate` queda como el adaptador que traduce
-eventos del motor a llamadas del contrato.
+`createRegistry(plugins)` recoge los huecos en el orden de la lista; la pantalla
+solo los pinta. Añadir una función = un archivo en `features/` + una línea en
+`viewer/plugins/index.ts`.
 
-### Orden de migración (la app funciona entre pasos)
+**El estado compartido va en `ReaderStore`** (`useReader()`), no en props:
 
-1. `core/`: mover `lib/{storage,idb,handles,book,toc,format}` sin cambiar firmas.
-2. `ui/`: extraer Button/IconButton/Dialog/Segmented/Slider/Toggle desde
-   `Sidebar`, `NoteDialog` y `QuoteDialog`. Sin lógica nueva.
-3. `viewer/plugins/types.ts` + `registry.ts` (solo tipos, nada conectado).
-4. Migrar **bookmarks** como primer plugin (es el más pequeño y prueba el
-   contrato de punta a punta).
-5. Migrar **annotations** y **notes**; `ReaderScreen` adelgaza.
-6. Migrar **search**, **quotes** y **touch**.
-7. Borrar lo que quede duplicado; `npm test` verde en cada paso.
+- documento: `book`, `meta`, `location`, `progress`, `selection`, `annotations`,
+  `settings`;
+- mutaciones: `addAnnotation`, `updateAnnotation`, `deleteAnnotation`,
+  `highlight()` (convierte la selección en resaltado y la limpia), `dismiss()`;
+- motor: `goTo`, `goToFraction`, `next`, `prev`, `search`, `markAnchors`;
+- interfaz: `panel`/`openPanel`/`closePanel`, `note`/`quote` (borradores de los
+  dos editores), `fullscreen`, `flash`, `t`.
+
+Decisiones conscientes:
+
+- **Los editores (nota y cita) viven en el store.** Son los dos diálogos del
+  lector y los abre más de una feature (el popover, la lista de notas). Tenerlos
+  como estado compartido evita un bus de eventos para dos casos.
+- **No hay hooks `onSelection`/`onRelocate`.** Un plugin que reaccione a la
+  selección lo hace leyendo `store.selection` en su `Overlay`; menos superficie
+  de contrato que mantener.
+- **El estado de búsqueda vive en el store** porque el progreso sobrevive al
+  cambio de pestaña: el panel se desmonta al cambiar de tab.
 
 ## 3. Trampas ya resueltas (no volver a pisarlas)
 
@@ -110,34 +112,40 @@ eventos del motor a llamadas del contrato.
   descendiendo al primer/último nodo de texto.
 - **Táctil**: el menú de Android/iOS es UI del navegador, no se puede cerrar.
   Solución: `user-select: none` + pulsación larga con `caretRangeFromPoint` y
-  pintado propio (`reader/touch/selection.ts`). En escritorio no se activa.
+  pintado propio (`features/touch/selection.ts`). En escritorio no se activa.
 - **PWA**: el service worker sirve caché; tras desplegar hace falta recarga
   dura o `autoUpdate` en la siguiente visita.
 - **Alto en tablet**: usar `100%` / `100svh`, nunca `100dvh` (la barra de Chrome
   tapa los controles).
 - **Despliegue**: el NUC no aguanta `docker build`; es `npm run build` + `scp` +
-  `chmod -R a+rX` (scp crea 700 y nginx da 403).
+  `chmod -R a+rX` (scp crea 700 y nginx da 403). Si reemplazas el directorio
+  `dist/` entero, reinicia el contenedor: el bind mount apunta al inodo viejo y
+  nginx devuelve 403 (ver `deploy/eridu.md`).
 - **CSP**: `script-src 'self'` es lo que impide que un EPUB ejecute scripts.
   `frame-ancestors 'none'`, `Permissions-Policy` y `COOP` ya están puestos.
 - **HMR**: tras renombrar módulos, Vite puede dejar dos instancias del contexto
   (el idioma no cambia). Reiniciar el dev server; no afecta al build.
 - **IndexedDB en tests**: `fake-indexeddb` + `resetIdb()`; los handles reales no
   son clonables, se prueba solo la lógica de permisos.
+- **El libro vive en un shadow root cerrado**: `document.querySelector` no lo
+  atraviesa. Para probar desde la consola, usa
+  `document.querySelector('foliate-view').renderer.getContents()`.
 
 ## 4. Convenciones
 
-- Versión en `src/lib/version.ts` y `package.json`; se muestra en el pie.
+- Versión en `src/core/version.ts` y `package.json`; se muestra en el pie.
 - Todo texto de UI pasa por `t('clave')` y existe en los tres diccionarios
-  (el tipo `MessageKey` obliga).
+  (el tipo `MessageKey` obliga). `store.t` es para los plugins que corren fuera
+  de un componente (atajos).
 - Estilos en SCSS con tokens (`_tokens.scss`), nada inline; dos personalidades
   (`paper` / `industrial`) resueltas por variables y `_decor.scss`.
 - Commits atómicos en imperativo; cada paso del refactor deja la app funcionando.
 
-## 5. Verificación mínima por cambio
+## 5. Verificación
 
 ```bash
 npx tsc --noEmit && npm test && npm run build
 ```
 
-Y antes de publicar: abrir la portada, abrir un EPUB, seleccionar texto,
-resaltar, buscar, plegar el margen y probar en 390 px y 820 px.
+Y antes de publicar, a mano: abrir la portada, abrir un EPUB, seleccionar texto,
+resaltar, buscar, plegar el margen, abrir Ajustes y probar en 390 px y 820 px.

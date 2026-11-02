@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { Icon } from '../../components/Icons'
-import { useI18n } from '../../i18n/index'
+import { useEffect, useState } from 'react'
+import { useI18n } from '../../i18n'
+import Dialog from '../../ui/Dialog'
 
 interface Props {
   open: boolean
@@ -10,45 +10,42 @@ interface Props {
   onClose: () => void
 }
 
+const FORM = 'note-form'
+
 export default function NoteDialog({ open, quote, initial, onSave, onClose }: Props) {
   const { t } = useI18n()
-  const ref = useRef<HTMLDialogElement | null>(null)
   const [text, setText] = useState(initial)
 
   useEffect(() => {
     if (open) setText(initial)
   }, [open, initial])
 
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
-  }, [open])
+  const save = () => onSave(text.trim())
 
   return (
-    <dialog
-      ref={ref}
-      className="dialog"
+    <Dialog
+      open={open}
+      title={t('note.title')}
+      hint={t('note.hint')}
       onClose={onClose}
-      onClick={(event) => {
-        if (event.target === ref.current) onClose()
-      }}
+      actions={
+        <>
+          <button className="btn btn--ghost" type="button" onClick={onClose}>
+            {t('note.cancel')}
+          </button>
+          <button className="btn btn--accent" type="submit" form={FORM}>
+            {t('note.save')}
+          </button>
+        </>
+      }
     >
       <form
-        className="dialog__box"
+        id={FORM}
         onSubmit={(event) => {
           event.preventDefault()
-          onSave(text.trim())
+          save()
         }}
       >
-        <header className="dialog__head">
-          <h2>{t('note.title')}</h2>
-          <button className="icon-btn icon-btn--ghost" type="button" onClick={onClose}>
-            <Icon name="x" size={16} />
-          </button>
-        </header>
-
         {quote && <blockquote className="dialog__quote">{quote}</blockquote>}
 
         <label className="dialog__field">
@@ -62,24 +59,12 @@ export default function NoteDialog({ open, quote, initial, onSave, onClose }: Pr
             onKeyDown={(event) => {
               if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
                 event.preventDefault()
-                onSave(text.trim())
+                save()
               }
             }}
           />
         </label>
-
-        <footer className="dialog__foot">
-          <span className="dialog__hint">{t('note.hint')}</span>
-          <div className="dialog__actions">
-            <button className="btn btn--ghost" type="button" onClick={onClose}>
-              {t('note.cancel')}
-            </button>
-            <button className="btn btn--accent" type="submit">
-              {t('note.save')}
-            </button>
-          </div>
-        </footer>
       </form>
-    </dialog>
+    </Dialog>
   )
 }

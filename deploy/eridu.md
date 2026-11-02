@@ -32,6 +32,13 @@ sudo docker run -d --name open-reader --restart unless-stopped \
 Para actualizar basta repetir el `scp` y el `chmod`; nginx sirve los archivos
 nuevos sin reiniciar (los nombres llevan hash).
 
+> **Nunca borres `dist/` y lo vuelvas a crear.** El bind mount del contenedor
+> apunta al *inodo* del directorio que existía al arrancar: si haces
+> `rm -rf dist && mv dist.new dist`, nginx sigue viendo el directorio viejo
+> (vacío) y responde **403** hasta que reinicies el contenedor. Si aun así
+> reemplazas el directorio, termina con
+> `sudo docker restart open-reader`.
+
 ## 2. Ingress del túnel
 
 Ya está puesto (regla #5) con `deploy/add-ingress.py`, que hace copia de

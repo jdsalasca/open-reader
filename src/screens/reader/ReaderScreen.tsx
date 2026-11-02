@@ -1,35 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Sidebar, { type PanelTab, type SearchState } from './BookPanel'
-import SelectionPopover from '../../features/highlights/SelectionPopover'
-import NoteDialog from '../../features/notes/NoteDialog'
-import QuoteDialog from '../../features/quotes/QuoteDialog'
-import MarginNotes from '../../features/notes/MarginNotes'
-import { useFoliate, type BookInfo, type Rect } from '../../viewer/useFoliate'
-import { useI18n } from '../../i18n/index'
-import {
-  exportBackup,
-  importBackup,
-  loadBook,
-  saveBook,
-  touchLibrary,
-} from '../../core/storage'
-import { bookToMarkdown } from '../../core/exportMarkdown'
-import { formatOf, titleFromName } from '../../core/book'
-import { downloadText, percent, uid } from '../../core/format'
+import { useI18n } from '../../i18n'
 import { Icon } from '../../components/Icons'
+import { highlightFrom } from '../../core/annotation'
+import { formatOf } from '../../core/book'
+import { loadBook, saveBook, touchLibrary } from '../../core/storage'
 import type {
   Annotation,
   BookMeta,
   BookProgress,
   BookRecord,
-  HighlightColor,
-  HighlightStyle,
   LocationInfo,
   SelectionInfo,
   Settings,
 } from '../../core/types'
+import { ReaderProvider, type NoteDraft, type QuoteDraft, type ReaderStore, type SearchState } from '../../viewer/ReaderContext'
+import { createRegistry } from '../../viewer/plugins/registry'
+import { plugins } from '../../viewer/plugins'
+import { SEARCH_TAB } from '../../features/search/plugin'
+import { useFoliate, type BookInfo, type Rect } from '../../viewer/useFoliate'
+import BookPanel from './BookPanel'
+import StatusBar from './StatusBar'
+import TopBar from './TopBar'
 
 const EMPTY_PROGRESS: BookProgress = { cfi: '', fraction: 0, chapter: '' }
+const EMPTY_SEARCH: SearchState = { query: '', progress: 0, running: false, results: [] }
+
+/** Static list, so the registry is built once per module load. */
+const registry = createRegistry(plugins)
 
 interface Props {
   file: File
@@ -37,28 +34,6 @@ interface Props {
   settings: Settings
   patchSettings: (patch: Partial<Settings>) => void
   onExit: () => void
-}
-
-interface PopoverState {
-  mode: 'new' | 'edit'
-  id?: string
-  rect: Rect
-}
-
-interface NoteTarget {
-  id?: string
-  quote: string
-  initial: string
-}
-
-interface QuoteTarget {
-  id?: string
-  text: string
-  color: HighlightColor
-  saved: boolean
-  cfi?: string
-  index?: number
-  chapter?: string
 }
 
 export default function ReaderScreen(props: Props) {
@@ -100,38 +75,21 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
   const [info, setInfo] = useState<BookInfo | null>(null)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [annotations, setAnnotations] = useState<Annotation[]>(
-    stored?.annotations ?? [],
-  )
-  const [progress, setProgress] = useState<BookProgress>(
-    stored?.progress ?? EMPTY_PROGRESS,
-  )
+  const [annotations, setAnnotations] = useState<Annotation[]>(stored?.annotations ?? [])
+  const [progress, setProgress] = useState<BookProgress>(stored?.progress ?? EMPTY_PROGRESS)
   const [location, setLocation] = useState<LocationInfo | null>(null)
   const [selection, setSelection] = useState<SelectionInfo | null>(null)
-  const [popover, setPopover] = useState<PopoverState | null>(null)
-  const [note, setNote] = useState<NoteTarget | null>(null)
-  const [quote, setQuote] = useState<QuoteTarget | null>(null)
-  const [search, setSearch] = useState<SearchState>({
-    query: '',
-    progress: 0,
-    running: false,
-    results: [],
+  const [active, setActive] = useState<{ annotation: Annotation; rect: Rect } | null>(null)
+  const [search, setSearch] = useState<SearchState>(EMPTY_SEARCH)
+  const [panel, setPanel] = useState({
+    open: settings.railOpen && window.innerWidth > 980,
+    tab: registry.tabs[0]?.id ?? 'toc',
   })
-  const [tab, setTab] = useState<PanelTab>('toc')
-  const [rail, setRailState] = useState(() => settings.railOpen && window.innerWidth > 980)
-  const setRail = useCallback(
-    (value: boolean) => {
-      setRailState(value)
-      patchSettings({ railOpen: value })
-    },
-    [patchSettings],
-  )
+  const [note, setNote] = useState<NoteDraft | null>(null)
+  const [quote, setQuote] = useState<QuoteDraft | null>(null)
   const [toast, setToast] = useState<string | null>(null)
-  const [isFull, setIsFull] = useState(false)
-  const [marginCollapsed, setMarginCollapsed] = useState(false)
-  const [anchors, setAnchors] = useState<Record<string, number>>({})
-  const [scrub, setScrub] = useState<number | null>(null)
-  const keyHandler = useRef<(event: KeyboardEvent) => void>(() => undefined)
+  const [fullscreen, setFullscreen] = useState(false)
+  const handlerRef = useRef<(event: KeyboardEvent) => void>(() => undefined)
 
   const meta: BookMeta | null = info
     ? {
@@ -175,6 +133,11 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
     return () => clearTimeout(timer)
   }, [progress, persist])
 
+  const flash = useCallback((message: string) => {
+    setToast(message)
+    setTimeout(() => setToast((current) => (current === message ? null : current)), 2200)
+  }, [])
+
   const foliate = useFoliate({
     file,
     initialCfi: stored?.progress.cfi ?? '',
@@ -188,312 +151,19 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
     },
     onSelection: (next) => {
       setSelection(next)
-      if (next) setPopover({ mode: 'new', rect: next.rect })
-      else setPopover((current) => (current?.mode === 'new' ? null : current))
+      if (next) setActive(null)
     },
-    onAnnotationClick: (id, rect) => setPopover({ mode: 'edit', id, rect }),
+    onAnnotationClick: (id, rect) => {
+      const annotation = annotations.find((item) => item.id === id)
+      if (annotation) setActive({ annotation, rect })
+    },
     onError: (cause) => {
       console.error(cause)
-      setError(
-        t('reader.error.body'),
-      )
+      setError(t('reader.error.body'))
     },
     onReady: () => setReady(true),
-    onKeyDown: (event) => keyHandler.current(event),
+    onKeyDown: (event) => handlerRef.current(event),
   })
-
-  const flash = useCallback((message: string) => {
-    setToast(message)
-    setTimeout(() => setToast((current) => (current === message ? null : current)), 2200)
-  }, [])
-
-  const createMark = useCallback(
-    (extra: {
-      color?: HighlightColor
-      style?: HighlightStyle
-      note?: string
-      quoted?: boolean
-    }) => {
-      if (!selection) return
-      const annotation: Annotation = {
-        id: uid(),
-        kind: 'highlight',
-        cfi: selection.cfi,
-        index: selection.index,
-        text: selection.text,
-        note: extra.note ?? '',
-        color: extra.color ?? 'amber',
-        style: extra.style ?? 'highlight',
-        chapter: location?.chapter ?? '',
-        createdAt: Date.now(),
-        quoted: extra.quoted,
-      }
-      setAnnotations((list) => [...list, annotation])
-      foliate.addAnnotation(annotation)
-      foliate.deselect()
-      setSelection(null)
-      setPopover(null)
-    },
-    [selection, location?.chapter, foliate],
-  )
-
-  const updateMark = useCallback((id: string, patch: Partial<Annotation>) => {
-    setAnnotations((list) =>
-      list.map((item) => (item.id === id ? { ...item, ...patch } : item)),
-    )
-  }, [])
-
-  const deleteMark = useCallback(
-    (id: string) => {
-      const target = annotations.find((item) => item.id === id)
-      if (target) foliate.removeAnnotation(target)
-      setAnnotations((list) => list.filter((item) => item.id !== id))
-      setPopover(null)
-      flash(target?.kind === 'bookmark' ? t('reader.toast.unbookmarked') : t('reader.toast.deleted'))
-    },
-    [annotations, foliate, flash],
-  )
-
-  const addBookmark = useCallback(() => {
-    if (!location?.cfi) return
-    const existing = annotations.find(
-      (item) => item.kind === 'bookmark' && item.cfi === location.cfi,
-    )
-    if (existing) {
-      deleteMark(existing.id)
-      return
-    }
-    setAnnotations((list) => [
-      ...list,
-      {
-        id: uid(),
-        kind: 'bookmark',
-        cfi: location.cfi,
-        index: location.index,
-        text:
-          location.chapter ||
-          (location.page ? `Página ${location.page}` : `Página ${location.index + 1}`),
-        note: '',
-        color: 'rust',
-        style: 'highlight',
-        chapter: location.chapter,
-        createdAt: Date.now(),
-      },
-    ])
-    flash(t('reader.toast.bookmarked'))
-  }, [location, annotations, deleteMark, flash])
-
-  const applyMark = useCallback(
-    (patch: { color?: HighlightColor; style?: HighlightStyle }) => {
-      if (popover?.mode === 'edit' && popover.id) {
-        updateMark(popover.id, patch)
-        return
-      }
-      createMark(patch)
-    },
-    [popover, updateMark, createMark],
-  )
-
-  const runSearch = useCallback(
-    async (raw: string) => {
-      const query = raw.trim()
-      if (query.length < 2) {
-        foliate.clearSearch()
-        setSearch({ query, progress: 0, running: false, results: [] })
-        return
-      }
-      setSearch({ query, progress: 0, running: true, results: [] })
-      await foliate.search(
-        query,
-        (progress) =>
-          setSearch((current) => (current.query === query ? { ...current, progress } : current)),
-        (label, items) =>
-          setSearch((current) =>
-            current.query === query
-              ? { ...current, results: [...current.results, { label, items }] }
-              : current,
-          ),
-      )
-      setSearch((current) =>
-        current.query === query ? { ...current, running: false } : current,
-      )
-    },
-    [foliate],
-  )
-
-  const clearSearch = useCallback(() => {
-    foliate.clearSearch()
-    setSearch({ query: '', progress: 0, running: false, results: [] })
-  }, [foliate])
-
-  const openQuote = useCallback(
-    (source: Annotation | null) => {
-      if (source) {
-        setQuote({
-          id: source.id,
-          text: source.text,
-          color: source.color,
-          saved: Boolean(source.quoted),
-          cfi: source.cfi,
-          index: source.index,
-          chapter: source.chapter,
-        })
-        return
-      }
-      if (selection) {
-        setQuote({
-          text: selection.text,
-          color: 'amber',
-          saved: false,
-          cfi: selection.cfi,
-          index: selection.index,
-          chapter: location?.chapter ?? '',
-        })
-      }
-    },
-    [selection, location?.chapter],
-  )
-
-  const saveQuote = useCallback(() => {
-    if (!quote) return
-    if (quote.id) {
-      updateMark(quote.id, { quoted: true })
-    } else if (quote.cfi) {
-      const annotation: Annotation = {
-        id: uid(),
-        kind: 'highlight',
-        cfi: quote.cfi,
-        index: quote.index ?? 0,
-        text: quote.text,
-        note: '',
-        color: quote.color,
-        style: 'highlight',
-        chapter: quote.chapter ?? '',
-        createdAt: Date.now(),
-        quoted: true,
-      }
-      setAnnotations((list) => [...list, annotation])
-      foliate.addAnnotation(annotation)
-      foliate.deselect()
-      setSelection(null)
-      setPopover(null)
-      setQuote((current) =>
-        current ? { ...current, saved: true, id: annotation.id } : current,
-      )
-    }
-    flash(t('reader.toast.quoted'))
-  }, [quote, updateMark, foliate, flash])
-
-  const exportMarkdown = useCallback(() => {
-    if (!meta) return
-    const slug =
-      meta.title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .slice(0, 48) || 'libro'
-    downloadText(`notas-${slug}.md`, bookToMarkdown({ meta, progress, annotations }))
-    flash(t('reader.toast.md'))
-  }, [meta, progress, annotations, flash])
-
-  const toggleFull = useCallback(async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen()
-      else await document.documentElement.requestFullscreen()
-    } catch {
-      flash(t('reader.toast.fullscreenFail'))
-    }
-  }, [flash])
-
-  const toggleTheme = useCallback(() => {
-    patchSettings({ theme: settings.theme === 'industrial' ? 'paper' : 'industrial' })
-  }, [patchSettings, settings.theme])
-
-  const handleKey = useCallback(
-    (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null
-      if (target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
-      const key = event.key
-      if ((event.ctrlKey || event.metaKey) && (key === 'f' || key === 'F')) {
-        event.preventDefault()
-        setTab('search')
-        setRail(true)
-        return
-      }
-      const goNext = () => {
-        event.preventDefault()
-        foliate.next()
-      }
-      const goPrev = () => {
-        event.preventDefault()
-        foliate.prev()
-      }
-      switch (key) {
-        case 'ArrowRight':
-        case 'PageDown':
-        case ' ':
-          goNext()
-          break
-        case 'ArrowLeft':
-        case 'PageUp':
-          goPrev()
-          break
-        case 'Home':
-          event.preventDefault()
-          void foliate.goTo(0)
-          break
-        case 'End':
-          event.preventDefault()
-          void foliate.goToFraction(1)
-          break
-        case 'b':
-          event.preventDefault()
-          addBookmark()
-          break
-        case 'f':
-          event.preventDefault()
-          void toggleFull()
-          break
-        case 't':
-          event.preventDefault()
-          toggleTheme()
-          break
-        case 'Escape':
-          setPopover(null)
-          setSelection(null)
-          break
-        default:
-          break
-      }
-    },
-    [foliate, addBookmark, toggleFull, toggleTheme],
-  )
-
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => handleKey(event)
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [handleKey])
-
-  keyHandler.current = handleKey
-
-  useEffect(() => {
-    const handler = () => setIsFull(Boolean(document.fullscreenElement))
-    document.addEventListener('fullscreenchange', handler)
-    return () => document.removeEventListener('fullscreenchange', handler)
-  }, [])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setAnchors(foliate.markAnchors()), 120)
-    return () => window.clearTimeout(timer)
-  }, [location?.cfi, annotations, foliate])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setAnchors(foliate.markAnchors()), 120)
-    return () => window.clearTimeout(timer)
-  }, [location?.cfi, annotations, foliate])
 
   useEffect(() => {
     if (!info) return
@@ -503,297 +173,264 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
     }
   }, [info])
 
-  const current = popover?.id
-    ? annotations.find((item) => item.id === popover.id) ?? null
-    : null
-  const bookmarked = Boolean(
-    location?.cfi && annotations.some((item) => item.kind === 'bookmark' && item.cfi === location.cfi),
-  )
-  const marks = annotations.filter((item) => item.kind === 'highlight').length
+  useEffect(() => {
+    const handler = () => setFullscreen(Boolean(document.fullscreenElement))
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  }, [])
 
-  const openNote = () => {
-    if (current) {
-      setNote({ id: current.id, quote: current.text, initial: current.note })
-    } else if (selection) {
-      setNote({ quote: selection.text, initial: '' })
+  const openPanel = (tab?: string) => {
+    setPanel((current) => ({ open: true, tab: tab ?? current.tab }))
+    patchSettings({ railOpen: true })
+  }
+
+  const closePanel = () => {
+    setPanel((current) => ({ ...current, open: false }))
+    patchSettings({ railOpen: false })
+  }
+
+  const dismiss = () => {
+    setSelection(null)
+    setActive(null)
+    foliate.deselect()
+  }
+
+  const store: ReaderStore = {
+    book: info,
+    meta,
+    ready,
+    settings,
+    patchSettings,
+    t,
+    flash,
+
+    location,
+    progress,
+    selection,
+    active,
+    annotations,
+
+    addAnnotation(annotation) {
+      setAnnotations((list) => [...list, annotation])
+      foliate.addAnnotation(annotation)
+    },
+    updateAnnotation(id, patch) {
+      setAnnotations((list) => list.map((item) => (item.id === id ? { ...item, ...patch } : item)))
+    },
+    deleteAnnotation(id) {
+      const target = annotations.find((item) => item.id === id)
+      if (target) foliate.removeAnnotation(target)
+      setAnnotations((list) => list.filter((item) => item.id !== id))
+      setActive(null)
+      flash(t(target?.kind === 'bookmark' ? 'reader.toast.unbookmarked' : 'reader.toast.deleted'))
+    },
+    setAnnotations,
+    highlight(patch = {}) {
+      if (!selection) return null
+      const annotation = highlightFrom(selection, location?.chapter ?? '', patch)
+      setAnnotations((list) => [...list, annotation])
+      foliate.addAnnotation(annotation)
+      dismiss()
+      return annotation
+    },
+    dismiss,
+
+    goTo(target) {
+      void foliate.goTo(target)
+      setActive(null)
+      if (window.innerWidth <= 980) closePanel()
+    },
+    goToFraction: (fraction) => void foliate.goToFraction(fraction),
+    next: foliate.next,
+    prev: foliate.prev,
+    deselect: foliate.deselect,
+    fullscreen,
+    async toggleFullscreen() {
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen()
+        else await document.documentElement.requestFullscreen()
+      } catch {
+        flash(t('reader.toast.fullscreenFail'))
+      }
+    },
+    markAnchors: foliate.markAnchors,
+    search,
+    runSearch(raw) {
+      const query = raw.trim()
+      if (query.length < 2) {
+        foliate.clearSearch()
+        setSearch({ ...EMPTY_SEARCH, query })
+        return
+      }
+      setSearch({ query, progress: 0, running: true, results: [] })
+      void foliate
+        .search(
+          query,
+          (value) => setSearch((current) => (current.query === query ? { ...current, progress: value } : current)),
+          (label, items) =>
+            setSearch((current) =>
+              current.query === query
+                ? { ...current, results: [...current.results, { label, items }] }
+                : current,
+            ),
+        )
+        .then(() =>
+          setSearch((current) => (current.query === query ? { ...current, running: false } : current)),
+        )
+    },
+    clearSearch() {
+      foliate.clearSearch()
+      setSearch(EMPTY_SEARCH)
+    },
+
+    panel,
+    openPanel,
+    closePanel,
+    togglePanel: () => (panel.open ? closePanel() : openPanel()),
+
+    note,
+    openNote: setNote,
+    closeNote: () => setNote(null),
+    quote,
+    openQuote: setQuote,
+    closeQuote: () => setQuote(null),
+
+    resetProgress: () => setProgress(EMPTY_PROGRESS),
+  }
+
+  const handleKey = (event: KeyboardEvent) => {
+    const target = event.target as HTMLElement | null
+    if (target?.closest?.('input, textarea, select, [contenteditable="true"]')) return
+    const key = event.key
+
+    if ((event.ctrlKey || event.metaKey) && (key === 'f' || key === 'F')) {
+      event.preventDefault()
+      openPanel(SEARCH_TAB)
+      return
+    }
+    if (registry.key(store, event)) return
+
+    const goNext = () => {
+      event.preventDefault()
+      foliate.next()
+    }
+    const goPrev = () => {
+      event.preventDefault()
+      foliate.prev()
+    }
+
+    switch (key) {
+      case 'ArrowRight':
+      case 'PageDown':
+      case ' ':
+        goNext()
+        break
+      case 'ArrowLeft':
+      case 'PageUp':
+        goPrev()
+        break
+      case 'Home':
+        event.preventDefault()
+        void foliate.goTo(0)
+        break
+      case 'End':
+        event.preventDefault()
+        void foliate.goToFraction(1)
+        break
+      case 'f':
+        event.preventDefault()
+        void store.toggleFullscreen()
+        break
+      case 't':
+        event.preventDefault()
+        patchSettings({ theme: settings.theme === 'industrial' ? 'paper' : 'industrial' })
+        break
+      case 'Escape':
+        dismiss()
+        break
+      default:
+        break
     }
   }
 
-  const saveNote = (text: string) => {
-    if (note?.id) updateMark(note.id, { note: text })
-    else if (note) createMark({ note: text })
-    setNote(null)
-    setPopover(null)
-  }
+  handlerRef.current = handleKey
 
-  const exportThis = () => {
-    if (!meta) return
-    downloadText(
-      `notas-${meta.title.replace(/[^\w\-]+/g, '-').slice(0, 40) || 'libro'}.eridu`,
-      exportBackup([{ meta, progress, annotations }]),
-    )
-    flash(t('reader.toast.exported'))
-  }
-
-  const importHere = async (picked: File) => {
-    try {
-      await importBackup(await picked.text())
-      const reloaded = await loadBook(bookId)
-      if (reloaded) setAnnotations(reloaded.annotations)
-      flash(t('reader.toast.imported'))
-    } catch {
-      flash(t('reader.toast.importFail'))
-    }
-  }
-
-  const clearMarks = () => {
-    if (!window.confirm(t('reader.confirm.clear'))) return
-    setAnnotations([])
-    setProgress(EMPTY_PROGRESS)
-    setPopover(null)
-    flash(t('reader.toast.cleared'))
-  }
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => handlerRef.current(event)
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   return (
-    <div className={`reader${rail ? ' is-rail-open' : ''}`}>
-      <header className="topbar">
-        <div className="topbar__left">
-          <button className="icon-btn" type="button" onClick={onExit} title={t('reader.back')}>
-            <Icon name="arrow-left" />
-          </button>
-          <div className="topbar__id">
-            <span className="topbar__title">{info?.title ?? titleFromName(file.name)}</span>
-            <span className="topbar__meta">
-              {info?.author || 'Autor desconocido'}
-              {info ? ` · ${formatOf(file.name)}` : ''}
-            </span>
-          </div>
-        </div>
+    <ReaderProvider value={store}>
+      <div className={`reader${panel.open ? ' is-rail-open' : ''}`}>
+        <TopBar file={file} onExit={onExit} actions={registry.actions} />
 
-        <div className="topbar__chapter">
-          <span className="topbar__chapter-label">{location?.chapter || t('reader.cover')}</span>
-        </div>
+        <div className="reader__body">
+          {panel.open && <BookPanel tabs={registry.tabs} />}
 
-        <div className="topbar__actions">
-          <button
-            className={`icon-btn${bookmarked ? ' is-active' : ''}`}
-            type="button"
-            onClick={addBookmark}
-            title={t('reader.bookmark')}
-          >
-            <Icon name={bookmarked ? 'bookmark-filled' : 'bookmark'} />
-          </button>
-          <button
-            className="icon-btn"
-            type="button"
-            onClick={() => {
-              setTab('notes')
-              setRail(true)
-            }}
-            title={t('reader.notes')}
-          >
-            <Icon name="highlighter" />
-            {marks > 0 && <span className="badge">{marks}</span>}
-          </button>
-          <button className="icon-btn" type="button" onClick={toggleTheme} title={t('reader.theme')}>
-            <Icon name={settings.theme === 'industrial' ? 'sun' : 'moon'} />
-          </button>
-          <button
-            className="icon-btn"
-            type="button"
-            onClick={() => void toggleFull()}
-            title={t('reader.fullscreen')}
-          >
-            <Icon name={isFull ? 'shrink' : 'expand'} />
-          </button>
-          <button
-            className={`icon-btn${rail ? ' is-active' : ''}`}
-            type="button"
-            onClick={() => setRail(!rail)}
-            title={t('reader.panel')}
-          >
-            <Icon name="list" />
-          </button>
-        </div>
-      </header>
+          <main className="stage">
+            <div
+              className="stage__sheet"
+              style={
+                info && !info.fixedLayout
+                  ? { maxWidth: Math.round(settings.columnWidth * 1.214) }
+                  : undefined
+              }
+            >
+              <div className="stage__view" ref={foliate.containerRef} />
+              {!ready && !error && (
+                <div className="stage__loading">
+                  <span className="spinner" aria-hidden="true" />
+                  <p>{t('reader.loading')}</p>
+                </div>
+              )}
+              {error && (
+                <div className="stage__error">
+                  <h2>{t('reader.error.title')}</h2>
+                  <p>{error}</p>
+                  <button className="btn btn--accent" type="button" onClick={onExit}>
+                    {t('reader.error.back')}
+                  </button>
+                </div>
+              )}
+            </div>
 
-      <div className="reader__body">
-        <Sidebar
-          tab={tab}
-          onTab={setTab}
-          info={info}
-          annotations={annotations}
-          location={location}
-          settings={settings}
-          patchSettings={patchSettings}
-          onGoTo={(cfi) => {
-            void foliate.goTo(cfi)
-            setPopover(null)
-            if (window.innerWidth <= 980) setRail(false)
-          }}
-          onDelete={deleteMark}
-          onEditNote={(annotation) =>
-            setNote({ id: annotation.id, quote: annotation.text, initial: annotation.note })
-          }
-          onLike={(annotation) => updateMark(annotation.id, { liked: !annotation.liked })}
-          onQuote={(annotation) => openQuote(annotation)}
-          search={search}
-          onSearch={runSearch}
-          onClearSearch={clearSearch}
-          onExport={exportThis}
-          onExportMarkdown={exportMarkdown}
-          onImport={importHere}
-          onClear={clearMarks}
-          onClose={() => setRail(false)}
-        />
+            {registry.asides.map((Aside, index) => (
+              <Aside key={index} />
+            ))}
+          </main>
 
-        <main className="stage">
-          <div
-            className="stage__sheet"
-            style={
-              info && !info.fixedLayout
-                ? { maxWidth: Math.round(settings.columnWidth * 1.214) }
-                : undefined
-            }
-          >
-            <div className="stage__view" ref={foliate.containerRef} />
-            {!ready && !error && (
-              <div className="stage__loading">
-                <span className="spinner" aria-hidden="true" />
-                <p>{t('reader.loading')}</p>
-              </div>
-            )}
-            {error && (
-              <div className="stage__error">
-                <h2>{t('reader.error.title')}</h2>
-                <p>{error}</p>
-                <button className="btn btn--accent" type="button" onClick={onExit}>
-                  {t('reader.error.back')}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {settings.marginNotes && (
-            <MarginNotes
-              annotations={annotations.filter((item) => item.index === location?.index)}
-              anchors={anchors}
-              collapsed={marginCollapsed}
-              onToggle={() => setMarginCollapsed((value) => !value)}
-              chapter={location?.chapter ?? ''}
-              onOpen={(annotation) => {
-                void foliate.goTo(annotation.cfi)
-                setPopover(null)
-              }}
-              onLike={(annotation) => updateMark(annotation.id, { liked: !annotation.liked })}
-              onDelete={deleteMark}
+          {panel.open && (
+            <button
+              className="rail-backdrop"
+              type="button"
+              aria-label={t('rail.close')}
+              onClick={closePanel}
             />
           )}
-        </main>
 
-        {rail && (
-          <button
-            className="rail-backdrop"
-            type="button"
-            aria-label={t('rail.close')}
-            onClick={() => setRail(false)}
-          />
-        )}
+          {!panel.open && (
+            <button
+              className="rail__handle"
+              type="button"
+              onClick={() => openPanel()}
+              title={t('rail.expand')}
+              aria-label={t('rail.expand')}
+            >
+              <Icon name="chevron-right" size={14} />
+            </button>
+          )}
+        </div>
 
-        {!rail && (
-          <button
-            className="rail__handle"
-            type="button"
-            onClick={() => setRail(true)}
-            title={t('rail.expand')}
-            aria-label={t('rail.expand')}
-          >
-            <Icon name="chevron-right" size={14} />
-          </button>
-        )}
+        <StatusBar />
+
+        {registry.overlays.map((Overlay, index) => (
+          <Overlay key={index} />
+        ))}
+
+        {toast && <div className="toast">{toast}</div>}
       </div>
-
-      <footer className="statusbar">
-        <button
-          className="icon-btn icon-btn--ghost"
-          type="button"
-          onClick={foliate.prev}
-          title={t('reader.prev')}
-        >
-          <Icon name="chevron-left" />
-        </button>
-        <input
-          className="progress"
-          type="range"
-          min={0}
-          max={1000}
-          value={scrub ?? Math.round((location?.fraction ?? 0) * 1000)}
-          onChange={(event) => setScrub(Number(event.target.value))}
-          onPointerUp={() => {
-            if (scrub === null) return
-            void foliate.goToFraction(scrub / 1000)
-            setScrub(null)
-          }}
-          onKeyUp={() => {
-            if (scrub === null) return
-            void foliate.goToFraction(scrub / 1000)
-            setScrub(null)
-          }}
-          aria-label={t('reader.progress')}
-        />
-        <button
-          className="icon-btn icon-btn--ghost"
-          type="button"
-          onClick={foliate.next}
-          title={t('reader.next')}
-        >
-          <Icon name="chevron-right" />
-        </button>
-        <span className="statusbar__readout">
-          <strong>{percent(location?.fraction ?? 0)}</strong>
-          <span className="statusbar__sep">/</span>
-          <span>{location?.page ? t('reader.page', { n: location.page }) : location?.chapter || t('reader.nowhere')}</span>
-        </span>
-      </footer>
-
-      {popover && (current || selection) && (
-        <SelectionPopover
-          mode={popover.mode}
-          annotation={current}
-          rect={popover.rect}
-          onApply={applyMark}
-          onNote={openNote}
-          onQuote={() => openQuote(null)}
-          onDelete={current ? () => deleteMark(current.id) : undefined}
-          onClose={() => {
-            setPopover(null)
-            setSelection(null)
-            foliate.deselect()
-          }}
-        />
-      )}
-
-      <NoteDialog
-        open={Boolean(note)}
-        quote={note?.quote ?? ''}
-        initial={note?.initial ?? ''}
-        onSave={saveNote}
-        onClose={() => setNote(null)}
-      />
-
-      <QuoteDialog
-        open={Boolean(quote)}
-        text={quote?.text ?? ''}
-        author={info?.author ?? ''}
-        title={info?.title ?? titleFromName(file.name)}
-        color={quote?.color ?? 'amber'}
-        saved={Boolean(quote?.saved)}
-        onSave={saveQuote}
-        onClose={() => setQuote(null)}
-      />
-
-      {toast && <div className="toast">{toast}</div>}
-    </div>
+    </ReaderProvider>
   )
 }
-

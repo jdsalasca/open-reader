@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { COLOR_KEYS, HIGHLIGHT_COLORS, HIGHLIGHT_STYLES, STYLE_KEYS } from '../../core/reading'
+import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS } from '../../core/reading'
 import { Icon } from '../../components/Icons'
+import { useI18n } from '../../i18n'
 import type { Rect } from '../../viewer/useFoliate'
 import type { Annotation, HighlightColor, HighlightStyle } from '../../core/types'
 
@@ -32,6 +33,7 @@ export default function SelectionPopover({
   onDelete,
   onClose,
 }: Props) {
+  const { t } = useI18n()
   const ref = useRef<HTMLDivElement | null>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
   const color = annotation?.color ?? 'amber'
@@ -61,7 +63,7 @@ export default function SelectionPopover({
       ref={ref}
       className="pop"
       role="toolbar"
-      aria-label="Anotar"
+      aria-label={t('reader.notes')}
       style={{
         left: pos?.left ?? rect.left,
         top: pos?.top ?? rect.top,
@@ -75,8 +77,8 @@ export default function SelectionPopover({
             type="button"
             className={`swatch${color === key ? ' is-on' : ''}`}
             style={{ background: HIGHLIGHT_COLORS[key].hex }}
-            title={HIGHLIGHT_COLORS[key].label}
-            aria-label={HIGHLIGHT_COLORS[key].label}
+            title={t(`color.${key}`)}
+            aria-label={t(`color.${key}`)}
             aria-pressed={color === key}
             onClick={() => onApply({ color: key })}
           />
@@ -89,8 +91,8 @@ export default function SelectionPopover({
             key={key}
             type="button"
             className={`style-btn${style === key ? ' is-on' : ''}`}
-            title={HIGHLIGHT_STYLES[key]}
-            aria-label={HIGHLIGHT_STYLES[key]}
+            title={t(`style.${key}`)}
+            aria-label={t(`style.${key}`)}
             aria-pressed={style === key}
             onClick={() => onApply({ style: key })}
           >
@@ -111,23 +113,23 @@ export default function SelectionPopover({
       <div className="pop__row pop__actions">
         <button type="button" className="pop__action" onClick={onNote}>
           <Icon name="note" size={16} />
-          {annotation?.note ? 'Editar nota' : 'Nota'}
+          {annotation?.note ? t('pop.editNote') : t('pop.note')}
         </button>
         <button type="button" className="pop__action" onClick={onQuote}>
           <Icon name="quote" size={16} />
-          Citar
+          {t('pop.quote')}
         </button>
         {mode === 'edit' && onDelete && (
           <button type="button" className="pop__action pop__action--danger" onClick={onDelete}>
             <Icon name="trash" size={16} />
-            Borrar
+            {t('pop.delete')}
           </button>
         )}
         <button
           type="button"
           className="pop__action pop__action--close"
           onClick={onClose}
-          aria-label="Cerrar"
+          aria-label={t('pop.close')}
         >
           <Icon name="x" size={16} />
         </button>

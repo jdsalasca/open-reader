@@ -152,7 +152,7 @@ cp .env.example .env
 npm run build
 ```
 
-O se cambia directamente en `src/lib/links.ts`. Sirve cualquier URL de donación:
+O se cambia directamente en `src/core/links.ts`. Sirve cualquier URL de donación:
 Ko-fi, Buy Me a Coffee, GitHub Sponsors o PayPal.me.
 
 > **Desde Colombia:** Ko-fi paga directo a tu **PayPal** (Ko-fi nunca retiene el
@@ -164,15 +164,40 @@ Ko-fi, Buy Me a Coffee, GitHub Sponsors o PayPal.me.
 
 ```
 src/
-  lib/         tipos, almacenamiento (IndexedDB), huella del libro, handles,
-               exportación a Markdown, tarjeta de cita, CSS del libro
+  core/        tipos, almacenamiento (IndexedDB), huella del libro, handles,
+               exportación a Markdown, tarjeta de cita, CSS del libro y
+               fábricas de anotaciones (sin React)
   i18n/        diccionarios es/en/zh y contexto
-  reader/      hook de foliate, pantalla de lectura, panel, popover, diálogos
-  shelf/       estantería, ajustes rápidos y zona de arrastre
+  viewer/      motor (useFoliate), estado de la sesión (ReaderContext) y el
+               contrato de plugins con su registro
+  features/    cada función del lector como plugin: índice, búsqueda, notas,
+               resaltados, citas, marcadores, ajustes y selección táctil
+  screens/     estantería y pantalla de lectura (barra, panel, pie)
+  ui/          controles y diálogo reutilizables
   styles/      SCSS: tokens, base, shelf, reader, panels, gutter, popover, decor
   vendor/      foliate-js (MIT) con tres parches documentados
-tests/         vitest: almacenamiento, índice, Markdown, handles
+tests/         vitest: almacenamiento, índice, Markdown, handles, plugins
 ```
+
+### Añadir una función al lector
+
+Cada función es un plugin: un archivo que declara **qué aporta** al visor y en
+qué hueco lo pone. No hay que tocar la pantalla de lectura.
+
+```ts
+// src/features/dictionary/plugin.tsx
+export const dictionaryPlugin: ViewerPlugin = {
+  id: 'dictionary',
+  Overlay: DictionaryPopover, // UI flotante sobre la página
+  Action: DictionaryButton,   // botón en la barra superior
+  tab: { id: 'dictionary', label: 'tab.dictionary', Panel: DictionaryPanel },
+  onKey: (store, event) => event.key === 'd' && (lookup(store), true),
+}
+```
+
+Se añade a la lista de `src/viewer/plugins/index.ts` y aparece solo. Los plugins
+leen el estado de la sesión con `useReader()` —libro, ubicación, selección,
+anotaciones, ajustes— y no se conocen entre sí.
 
 ### Parches sobre foliate-js
 
