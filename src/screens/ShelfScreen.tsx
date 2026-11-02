@@ -9,6 +9,7 @@ import type { MessageKey } from '../i18n/es'
 import type { LibraryEntry, Settings } from '../core/types'
 import { Icon } from '../components/Icons'
 import InstallButton from '../components/InstallButton'
+import AppUpdate from '../components/AppUpdate'
 
 interface Props {
   library: LibraryEntry[]
@@ -172,6 +173,10 @@ export default function ShelfScreen({
                     {t('theme.dark')}
                   </button>
                 </div>
+              </div>
+              <div className="gear__group">
+                <span className="gear__label">{t('settings.app')}</span>
+                <AppUpdate />
               </div>
             </div>
           )}

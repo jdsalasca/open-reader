@@ -111,7 +111,10 @@ export default function MarginNotes({
       ) : (
         <ul className="gutter__list">
           {notes.map((item) => (
-            <li key={item.id} className="note-card">
+            <li
+              key={item.id}
+              className={`note-card${item.sticky ? ` note-card--sticky note-card--sticky-${item.sticky}` : ''}`}
+            >
               <span
                 className="note-card__bar"
                 style={{ background: HIGHLIGHT_COLORS[item.color].hex }}

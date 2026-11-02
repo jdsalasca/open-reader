@@ -33,6 +33,14 @@ function HighlightOverlay() {
       onNote={() =>
         openNote({ id: annotation?.id, quote: text, initial: annotation?.note ?? '' })
       }
+      onSticky={(sticky) =>
+        openNote({
+          id: annotation?.id,
+          quote: text,
+          initial: annotation?.note ?? '',
+          sticky,
+        })
+      }
       onQuote={() =>
         openQuote({
           id: annotation?.id,

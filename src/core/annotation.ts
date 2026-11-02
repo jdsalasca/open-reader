@@ -4,6 +4,7 @@ import type {
   HighlightColor,
   HighlightStyle,
   SelectionInfo,
+  StickyColor,
 } from './types'
 
 export interface HighlightPatch {
@@ -11,6 +12,13 @@ export interface HighlightPatch {
   style?: HighlightStyle
   note?: string
   quoted?: boolean
+  sticky?: StickyColor
+}
+
+/** Post-its keep the highlight subtle; the colour lives in the margin card. */
+const STICKY_HIGHLIGHT: Record<StickyColor, HighlightColor> = {
+  yellow: 'amber',
+  purple: 'iris',
 }
 
 /** Turns a selection into a highlight. Kept out of React so it can be tested. */
@@ -19,6 +27,7 @@ export function highlightFrom(
   chapter: string,
   patch: HighlightPatch = {},
 ): Annotation {
+  const color = patch.sticky ? STICKY_HIGHLIGHT[patch.sticky] : (patch.color ?? 'amber')
   return {
     id: uid(),
     kind: 'highlight',
@@ -26,11 +35,12 @@ export function highlightFrom(
     index: selection.index,
     text: selection.text,
     note: patch.note ?? '',
-    color: patch.color ?? 'amber',
+    color,
     style: patch.style ?? 'highlight',
     chapter,
     createdAt: Date.now(),
     quoted: patch.quoted,
+    sticky: patch.sticky,
   }
 }
 

@@ -3,7 +3,7 @@ export const es = {
   'shelf.title1': 'Abre un libro.',
   'shelf.title2': 'Hazlo tuyo.',
   'shelf.lead':
-    'EPUB, MOBI, AZW3, FB2, CBZ y PDF en la misma mesa. Resalta en cinco colores, subraya, tacha, deja notas y marca páginas. El archivo nunca sale de tu navegador.',
+    'EPUB, MOBI, AZW3, FB2, CBZ y PDF en la misma mesa. Resalta en cinco colores, subraya, tacha, deja notas y pega post-its al margen. El archivo nunca sale de tu navegador.',
   'shelf.drop.title': 'Arrastra un libro aquí',
   'shelf.drop.hint': 'o elige el archivo desde tu equipo. Nada se sube a ningún sitio.',
   'shelf.drop.button': 'Elegir archivo',
@@ -139,6 +139,8 @@ export const es = {
   'pop.quote': 'Citar',
   'pop.delete': 'Borrar',
   'pop.close': 'Cerrar',
+  'sticky.yellow': "Nota amarilla",
+  'sticky.purple': "Nota morada",
   'color.amber': 'Ámbar',
   'color.rust': 'Óxido',
   'color.sage': 'Salvia',

@@ -36,6 +36,44 @@
   gap: 5px;
 }
 
+/* los dos post-it de la barra */
+.selbar__sticky {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-3);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--rule);
+  }
+}
+
+.postit {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 1px;
+  background-image: linear-gradient(315deg, rgba(0, 0, 0, 0.16) 0 26%, transparent 26%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.postit--yellow {
+  background-color: var(--sticky-yellow);
+}
+
+.postit--purple {
+  background-color: var(--sticky-purple);
+}
+
 .selbar__rule {
   flex: 0 0 1px;
   width: 1px;

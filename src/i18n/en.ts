@@ -5,7 +5,7 @@ export const en: Record<MessageKey, string> = {
   'shelf.title1': 'Open a book.',
   'shelf.title2': 'Make it yours.',
   'shelf.lead':
-    'EPUB, MOBI, AZW3, FB2, CBZ and PDF on the same desk. Highlight in five colours, underline, strike through, leave notes and bookmark pages. The file never leaves your browser.',
+    'EPUB, MOBI, AZW3, FB2, CBZ and PDF on the same desk. Highlight in five colours, underline, strike through, leave notes and stick post-its in the margin. The file never leaves your browser.',
   'shelf.drop.title': 'Drop a book here',
   'shelf.drop.hint': 'or pick the file from your computer. Nothing is uploaded anywhere.',
   'shelf.drop.button': 'Choose file',
@@ -139,6 +139,8 @@ export const en: Record<MessageKey, string> = {
   'pop.quote': 'Quote',
   'pop.delete': 'Delete',
   'pop.close': 'Close',
+  'sticky.yellow': "Yellow note",
+  'sticky.purple': "Purple note",
   'color.amber': 'Amber',
   'color.rust': 'Rust',
   'color.sage': 'Sage',

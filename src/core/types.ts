@@ -10,6 +10,9 @@ export type HighlightStyle = 'highlight' | 'underline' | 'squiggly' | 'strike'
 
 export type AnnotationKind = 'highlight' | 'bookmark'
 
+/** Post-it colours for notes stuck in the margin. */
+export type StickyColor = 'yellow' | 'purple'
+
 export interface Annotation {
   id: string
   kind: AnnotationKind
@@ -28,6 +31,8 @@ export interface Annotation {
   liked?: boolean
   /** Saved to the quotes collection (the shareable card). */
   quoted?: boolean
+  /** Draws the margin card as a post-it of this colour. */
+  sticky?: StickyColor
 }
 
 export interface TocItem {

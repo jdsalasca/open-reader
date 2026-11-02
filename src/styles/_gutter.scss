@@ -75,6 +75,48 @@
   }
 }
 
+/* post-it: la nota se pega al margen con su propio color */
+.note-card--sticky {
+  border-color: rgba(0, 0, 0, 0.16);
+  background: var(--sticky-tint);
+  box-shadow:
+    2px 2px 0 -1px var(--sheet),
+    3px 3px 0 0 rgba(0, 0, 0, 0.14);
+
+  &::after {
+    background: linear-gradient(225deg, var(--bg) 50%, rgba(0, 0, 0, 0.16) 50%);
+  }
+
+  .note-card__bar {
+    display: none;
+  }
+
+  .note-card__body,
+  .note-card__quote,
+  .note-card__note,
+  .note-card__time,
+  .note-card__like,
+  .note-card__delete {
+    color: var(--sticky-ink);
+  }
+
+  .note-card__quote {
+    opacity: 0.72;
+  }
+
+  .note-card__foot {
+    border-top-color: rgba(0, 0, 0, 0.16);
+  }
+}
+
+.note-card--sticky-yellow {
+  --sticky-tint: var(--sticky-yellow);
+}
+
+.note-card--sticky-purple {
+  --sticky-tint: var(--sticky-purple);
+}
+
 .note-card__bar {
   position: absolute;
   top: 8px;
@@ -265,6 +307,25 @@
   -webkit-line-clamp: unset;
   -webkit-box-orient: unset;
   overflow-wrap: anywhere;
+}
+
+/* --- actualizar la app (portada y lector) --- */
+.app-update {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+
+.app-update__version {
+  color: var(--ink-2);
+  font-size: 0.78rem;
+}
+
+.app-update__hint {
+  max-width: 34ch;
+  color: var(--ink-3);
+  font-size: 0.74rem;
+  line-height: 1.45;
 }
 
 /* --- botón de instalación --- */

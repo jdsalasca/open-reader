@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../../components/Icons'
-import { APP_VERSION } from '../../core/version'
+import AppUpdate from '../../components/AppUpdate'
 import { bytes, downloadText, percent, slug } from '../../core/format'
 import { bookToMarkdown } from '../../core/exportMarkdown'
 import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS } from '../../core/reading'
@@ -70,25 +70,6 @@ function SettingsPanel() {
     setAnnotations([])
     resetProgress()
     flash(t('reader.toast.cleared'))
-  }
-
-  /**
-   * The service worker keeps serving the copy it cached on the first visit, so
-   * a phone that never clears data can stay on an old build for weeks. This
-   * drops the cache and the registration, then reloads from the network.
-   */
-  const refreshApp = async () => {
-    try {
-      const registrations = (await navigator.serviceWorker?.getRegistrations?.()) ?? []
-      await Promise.all(registrations.map((registration) => registration.unregister()))
-      if ('caches' in window) {
-        const keys = await caches.keys()
-        await Promise.all(keys.map((key) => caches.delete(key)))
-      }
-    } catch {
-      /* sin service worker o sin permiso: recargar ya sirve */
-    }
-    window.location.reload()
   }
 
   return (
@@ -265,11 +246,7 @@ function SettingsPanel() {
 
       <section className="panel__group">
         <h3>{t('settings.app')}</h3>
-        <p className="panel__hint">{t('settings.version', { v: APP_VERSION })}</p>
-        <button className="btn btn--ghost" type="button" onClick={() => void refreshApp()}>
-          <Icon name="refresh" size={15} /> {t('settings.update')}
-        </button>
-        <p className="panel__hint">{t('settings.updateHint')}</p>
+        <AppUpdate />
       </section>
 
       <p className="panel__foot">

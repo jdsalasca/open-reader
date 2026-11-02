@@ -145,7 +145,7 @@ function MarginAside() {
 }
 
 function NoteOverlay() {
-  const { note, closeNote, updateAnnotation, highlight } = useReader()
+  const { note, closeNote, updateAnnotation, highlight, dismiss } = useReader()
 
   return (
     <NoteDialog
@@ -154,9 +154,16 @@ function NoteOverlay() {
       initial={note?.initial ?? ''}
       onClose={closeNote}
       onSave={(text) => {
-        if (note?.id) updateAnnotation(note.id, { note: text })
-        else highlight({ note: text })
+        if (note?.id) {
+          updateAnnotation(note.id, {
+            note: text,
+            ...(note.sticky ? { sticky: note.sticky } : {}),
+          })
+        } else {
+          highlight({ note: text, sticky: note?.sticky })
+        }
         closeNote()
+        dismiss()
       }}
     />
   )

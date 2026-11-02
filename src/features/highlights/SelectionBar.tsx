@@ -1,17 +1,20 @@
 import { COLOR_KEYS, HIGHLIGHT_COLORS, STYLE_KEYS } from '../../core/reading'
 import { Icon } from '../../components/Icons'
 import { useI18n } from '../../i18n'
-import type { Annotation, HighlightColor, HighlightStyle } from '../../core/types'
+import type { Annotation, HighlightColor, HighlightStyle, StickyColor } from '../../core/types'
 
 interface Props {
   mode: 'new' | 'edit'
   annotation: Annotation | null
   onApply: (patch: { color?: HighlightColor; style?: HighlightStyle }) => void
   onNote: () => void
+  onSticky: (color: StickyColor) => void
   onQuote: () => void
   onDelete?: () => void
   onClose: () => void
 }
+
+const STICKIES: StickyColor[] = ['yellow', 'purple']
 
 const STYLE_ICON: Record<HighlightStyle, { path: string; width: number; fill?: boolean }> = {
   highlight: { path: 'M4 9h16v6H4z', width: 0, fill: true },
@@ -32,6 +35,7 @@ export default function SelectionBar({
   annotation,
   onApply,
   onNote,
+  onSticky,
   onQuote,
   onDelete,
   onClose,
@@ -80,6 +84,24 @@ export default function SelectionBar({
                 strokeLinejoin="round"
               />
             </svg>
+          </button>
+        ))}
+      </div>
+
+      <span className="selbar__rule" aria-hidden="true" />
+
+      <div className="selbar__group">
+        {STICKIES.map((sticky) => (
+          <button
+            key={sticky}
+            type="button"
+            className="selbar__sticky"
+            title={t(`sticky.${sticky}`)}
+            aria-label={t(`sticky.${sticky}`)}
+            aria-pressed={annotation?.sticky === sticky}
+            onClick={() => onSticky(sticky)}
+          >
+            <span className={`postit postit--${sticky}`} aria-hidden="true" />
           </button>
         ))}
       </div>

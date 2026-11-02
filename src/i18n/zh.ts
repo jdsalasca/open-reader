@@ -5,7 +5,7 @@ export const zh: Record<MessageKey, string> = {
   'shelf.title1': '打开一本书。',
   'shelf.title2': '让它属于你。',
   'shelf.lead':
-    'EPUB、MOBI、AZW3、FB2、CBZ 与 PDF 同在一张书桌上。五种颜色高亮、下划线、删除线、笔记与书签。文件永远不会离开你的浏览器。',
+    'EPUB、MOBI、AZW3、FB2、CBZ 与 PDF 同在一张书桌上。五种颜色高亮、下划线、删除线、笔记，还能在页边贴上便利贴。文件永远不会离开你的浏览器。',
   'shelf.drop.title': '把书拖到这里',
   'shelf.drop.hint': '或从电脑中选择文件。任何内容都不会上传。',
   'shelf.drop.button': '选择文件',
@@ -135,6 +135,8 @@ export const zh: Record<MessageKey, string> = {
   'pop.quote': '引用',
   'pop.delete': '删除',
   'pop.close': '关闭',
+  'sticky.yellow': "黄色便签",
+  'sticky.purple': "紫色便签",
   'color.amber': '琥珀',
   'color.rust': '赭红',
   'color.sage': '鼠尾草',

@@ -9,6 +9,7 @@ import type {
   LocationInfo,
   SelectionInfo,
   Settings,
+  StickyColor,
 } from '../core/types'
 import type { BookInfo, Rect } from './useFoliate'
 
@@ -35,6 +36,8 @@ export interface NoteDraft {
   id?: string
   quote: string
   initial: string
+  /** Set when the note is a post-it in the margin. */
+  sticky?: StickyColor
 }
 
 /** A quote card being previewed. */
@@ -80,7 +83,13 @@ export interface ReaderStore {
   deleteAnnotation(id: string): void
   setAnnotations(next: Annotation[]): void
   /** Commits the current selection as a highlight and clears the selection. */
-  highlight(patch?: { color?: HighlightColor; style?: HighlightStyle; note?: string; quoted?: boolean }): Annotation | null
+  highlight(patch?: {
+    color?: HighlightColor
+    style?: HighlightStyle
+    note?: string
+    quoted?: boolean
+    sticky?: StickyColor
+  }): Annotation | null
   /** Drops the selection and the clicked mark. */
   dismiss(): void
 
