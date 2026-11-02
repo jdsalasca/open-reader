@@ -224,6 +224,13 @@ export function useFoliate(options: FoliateOptions) {
       doc.addEventListener('pointerdown', () => handlers.current.onSelection(null))
       doc.addEventListener('pointerup', () => setTimeout(() => readSelection(doc, index), 10))
       doc.addEventListener('keyup', () => setTimeout(() => readSelection(doc, index), 10))
+      // en táctil el menú del sistema aparece antes que pointerup; con
+      // selectionchange la barra propia sale igual
+      let settle = 0
+      doc.addEventListener('selectionchange', () => {
+        window.clearTimeout(settle)
+        settle = window.setTimeout(() => readSelection(doc, index), 260)
+      })
       doc.addEventListener('keydown', (event) => handlers.current.onKeyDown(event as KeyboardEvent))
       requestAnimationFrame(() => redraw(index))
     }
