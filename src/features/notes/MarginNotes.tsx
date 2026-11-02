@@ -37,13 +37,14 @@ export default function MarginNotes({
     return (
       <aside className="gutter gutter--mini" aria-label={t('margin.title')}>
         <button
-          className="gutter__toggle"
+          className="gutter__toggle gutter__toggle--mini"
           type="button"
           onClick={onToggle}
           title={t('margin.expand')}
           aria-label={t('margin.expand')}
         >
-          <Icon name="note" size={14} />
+          <Icon name="note" size={13} />
+          {notes.length > 0 && <span className="gutter__mini-count">{notes.length}</span>}
         </button>
       </aside>
     )

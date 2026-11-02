@@ -48,6 +48,10 @@ export default function CommentBubbles() {
   const comments = placed.filter((item) => item.mark.note.trim().length > 0)
   const stickies = placed.filter((item) => item.mark.sticky && !item.mark.note.trim().length)
 
+  // si un post-it cae en el mismo renglón que un comentario, baja para no taparse
+  const tabTop = (top: number) =>
+    comments.some((comment) => Math.abs(comment.top - top) < 24) ? top + 24 : top
+
   return (
     <div className="comments" ref={box}>
       {stickies.map(({ mark, top }) => (
@@ -55,8 +59,7 @@ export default function CommentBubbles() {
           key={mark.id}
           type="button"
           className={`postit-tab postit-tab--${mark.sticky}`}
-          // +12 para no chocar con una burbuja de comentario en el mismo renglón
-          style={{ top: top + 12 }}
+          style={{ top: tabTop(top) }}
           title={t('sticky.label')}
           aria-label={t('sticky.label')}
           onClick={() => activate(mark)}

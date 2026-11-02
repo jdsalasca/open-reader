@@ -256,8 +256,8 @@
 }
 
 .gutter--mini {
-  flex: 0 0 36px;
-  width: 36px;
+  flex: 0 0 44px;
+  width: 44px;
   padding: 0;
   overflow: visible;
 }
@@ -267,6 +267,24 @@
   top: 4px;
   right: 4px;
   z-index: 2;
+}
+
+/* plegado: una pastilla con el icono y cuántas notas hay en el capítulo */
+.gutter__toggle--mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 26px;
+  gap: 4px;
+  padding: 0 6px;
+
+  .gutter__mini-count {
+    color: var(--accent);
+    font-family: var(--f-mono);
+    font-size: 9px;
+    font-weight: 600;
+  }
 }
 
 /* el texto completo, sin recortes */
@@ -344,6 +362,13 @@
     transform: rotate(45deg);
   }
 
+  /* zona de toque más grande que el dibujo, sin agrandarlo */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -9px -7px -9px -9px;
+  }
+
   &:hover {
     background: var(--accent);
     color: var(--on-accent);
@@ -353,8 +378,8 @@
 @media (max-width: 720px) {
   .comment-bubble {
     right: 3px;
-    width: 24px;
-    height: 20px;
+    width: 25px;
+    height: 21px;
   }
 }
 
@@ -368,19 +393,30 @@
   border: 0;
   border-top: 9px solid transparent;
   border-bottom: 9px solid transparent;
-  border-right: 15px solid var(--sticky-yellow);
+  border-right: 15px solid var(--sticky-tab);
   background: none;
   pointer-events: auto;
   cursor: pointer;
   filter: drop-shadow(-1px 1px 2px rgba(0, 0, 0, 0.4));
+
+  /* el triángulo es pequeño: se toca desde un cuadrado invisible más grande */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -10px -4px -10px -18px;
+  }
 
   &:hover {
     border-right-width: 19px;
   }
 }
 
+.postit-tab--yellow {
+  --sticky-tab: var(--sticky-tab-yellow);
+}
+
 .postit-tab--purple {
-  border-right-color: var(--sticky-purple);
+  --sticky-tab: var(--sticky-tab-purple);
 }
 
 
