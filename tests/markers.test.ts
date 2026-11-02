@@ -18,7 +18,7 @@ const mark = (id: string, patch: Partial<Annotation> = {}): Annotation => ({
 
 describe('placeMarkers', () => {
   it('numera los comentarios en orden de lectura', () => {
-    const out = placeMarkers([mark('a'), mark('b'), mark('c')], 0, { a: 300, b: 100, c: 200 })
+    const out = placeMarkers([mark('a'), mark('b'), mark('c')], { a: 300, b: 100, c: 200 })
     expect(out.map((item) => [item.id, item.label, item.top])).toEqual([
       ['b', '1', 100],
       ['c', '2', 200],
@@ -29,7 +29,6 @@ describe('placeMarkers', () => {
   it('ordena por altura y, a igual altura, por fecha', () => {
     const out = placeMarkers(
       [mark('nuevo', { createdAt: 20 }), mark('viejo', { createdAt: 10 })],
-      0,
       { nuevo: 100, viejo: 100 },
     )
     expect(out.map((item) => item.id)).toEqual(['viejo', 'nuevo'])
@@ -37,8 +36,8 @@ describe('placeMarkers', () => {
 
   it('cambia a «9+» a partir del décimo', () => {
     const list = Array.from({ length: 12 }, (_, i) => mark(`m${i}`))
-    const anchors = Object.fromEntries(list.map((item, i) => [item.id, i * 10]))
-    const out = placeMarkers(list, 0, anchors)
+    const anchors = Object.fromEntries(list.map((item, i) => [item.id, i * 40]))
+    const out = placeMarkers(list, anchors)
     expect(out.slice(0, 10).map((item) => item.label)).toEqual([
       '1', '2', '3', '4', '5', '6', '7', '8', '9', '9+',
     ])
@@ -48,7 +47,6 @@ describe('placeMarkers', () => {
   it('un post-it es pestaña y no consume número', () => {
     const out = placeMarkers(
       [mark('nota'), mark('postit', { sticky: 'yellow' }), mark('otra')],
-      0,
       { nota: 100, postit: 200, otra: 300 },
     )
     expect(out.map((item) => [item.id, item.kind, item.label])).toEqual([
@@ -60,23 +58,21 @@ describe('placeMarkers', () => {
   })
 
   it('un post-it con nota escrita cuenta como comentario', () => {
-    const out = placeMarkers([mark('p', { sticky: 'purple', note: 'hola' })], 0, { p: 50 })
+    const out = placeMarkers([mark('p', { sticky: 'purple', note: 'hola' })], { p: 50 })
     expect(out[0]).toMatchObject({ kind: 'bubble', label: '1', color: 'purple' })
   })
 
   it('apila dos burbujas del mismo renglón', () => {
-    const out = placeMarkers([mark('a'), mark('b')], 0, { a: 100, b: 104 })
+    const out = placeMarkers([mark('a'), mark('b')], { a: 100, b: 104 })
     expect(out[0].top).toBe(100)
-    // la segunda se separa al menos una altura de burbuja
     expect(out[1].top - out[0].top).toBeGreaterThanOrEqual(24)
   })
 
   it('baja la pestaña si taparía una burbuja del mismo renglón', () => {
-    const out = placeMarkers(
-      [mark('c'), mark('p', { sticky: 'purple' })],
-      0,
-      { c: 200, p: 206 },
-    )
+    const out = placeMarkers([mark('c'), mark('p', { sticky: 'purple' })], {
+      c: 200,
+      p: 206,
+    })
     expect(out[1]).toMatchObject({ id: 'p', kind: 'sticky' })
     expect(out[1].top - out[0].top).toBeGreaterThanOrEqual(20)
   })
@@ -84,33 +80,30 @@ describe('placeMarkers', () => {
   it('separa dos pestañas del mismo renglón', () => {
     const out = placeMarkers(
       [mark('uno', { sticky: 'yellow' }), mark('dos', { sticky: 'purple' })],
-      0,
       { uno: 100, dos: 102 },
     )
     expect(out[1].top - out[0].top).toBeGreaterThanOrEqual(20)
   })
 
-  it('deja la pestaña quieta si no hay burbuja cerca', () => {
-    const out = placeMarkers([mark('p', { sticky: 'purple' })], 0, { p: 200 })
-    expect(out[0].top).toBe(200)
+  it('muestra las notas aunque vengan de otra sección visible', () => {
+    // el motor pinta dos secciones en la misma página y reporta solo la primera
+    const out = placeMarkers(
+      [mark('primera', { index: 3 }), mark('segunda', { index: 4 })],
+      { primera: 100, segunda: 400 },
+    )
+    expect(out.map((item) => item.id)).toEqual(['primera', 'segunda'])
   })
 
-  it('ignora marcadores de página, otras secciones y marcas sin posición', () => {
+  it('ignora marcadores de página y marcas sin posición', () => {
     const out = placeMarkers(
-      [
-        mark('bookmark', { kind: 'bookmark' }),
-        mark('otra-seccion', { index: 3 }),
-        mark('sin-ancla'),
-        mark('buena'),
-      ],
-      0,
-      { bookmark: 10, 'otra-seccion': 20, buena: 30 },
+      [mark('bookmark', { kind: 'bookmark' }), mark('sin-ancla'), mark('buena')],
+      { bookmark: 10, buena: 30 },
     )
     expect(out.map((item) => item.id)).toEqual(['buena'])
   })
 
   it('sin marcas devuelve una lista vacía', () => {
-    expect(placeMarkers([], 0, {})).toEqual([])
+    expect(placeMarkers([], {})).toEqual([])
   })
 })
 

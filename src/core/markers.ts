@@ -24,28 +24,26 @@ const STEP = 22
  * - Un **comentario** (resaltado, o post-it con nota escrita) es una burbuja
  *   numerada en orden de lectura.
  * - Un **post-it** sin nota es una pestaña de color, y no gasta número.
- * - Si una pestaña caería encima de una burbuja del mismo renglón, baja una
- *   línea para no taparla.
+ * - Si dos marcas caen en el mismo renglón, se apilan: nunca una encima de otra.
  *
- * Las posiciones llegan del motor (`markAnchors`), así que aquí no se resuelve
- * ningún CFI: solo se ordena, se numera y se colocan.
+ * Solo entran las anotaciones que traen altura en `anchors`, y esas son
+ * exactamente las que el motor tiene pintadas ahora mismo. Por eso aquí no se
+ * filtra por capítulo: preguntar por `location.index` descartaba las notas de
+ * la segunda sección de una página, que el motor reporta con otro índice.
  */
 export function placeMarkers(
   annotations: Annotation[],
-  index: number,
   anchors: Record<string, number>,
 ): Marker[] {
   const placed = annotations
     .filter(
       (item) =>
-        item.kind === 'highlight' &&
-        item.index === index &&
-        typeof anchors[item.id] === 'number',
+        item.kind === 'highlight' && typeof anchors[item.id] === 'number',
     )
     .map((item) => ({ item, top: anchors[item.id] }))
     .sort((a, b) => a.top - b.top || a.item.createdAt - b.item.createdAt)
 
-  const occupied: number[] = []
+  const bubbles: number[] = []
   const tabs: number[] = []
   const out: Marker[] = []
   let number = 0
@@ -56,7 +54,7 @@ export function placeMarkers(
       // ni encima de una burbuja ni encima de otra pestaña
       let y = top
       const busy = (value: number) =>
-        occupied.some((used) => Math.abs(used - value) < BUBBLE_HEIGHT) ||
+        bubbles.some((used) => Math.abs(used - value) < BUBBLE_HEIGHT) ||
         tabs.some((used) => Math.abs(used - value) < TAB_HEIGHT)
       while (busy(y)) y += TAB_HEIGHT
       tabs.push(y)
@@ -71,8 +69,8 @@ export function placeMarkers(
     }
     // dos marcas en el mismo renglón se apilan: nunca una encima de otra
     let y = top
-    while (occupied.some((used) => Math.abs(used - y) < BUBBLE_HEIGHT)) y += BUBBLE_HEIGHT
-    occupied.push(y)
+    while (bubbles.some((used) => Math.abs(used - y) < BUBBLE_HEIGHT)) y += BUBBLE_HEIGHT
+    bubbles.push(y)
     number += 1
     out.push({
       id: item.id,

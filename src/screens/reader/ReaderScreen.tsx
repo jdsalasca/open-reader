@@ -262,6 +262,7 @@ function ReaderBook({ file, bookId, settings, patchSettings, onExit, stored }: B
       }
     },
     markAnchors: foliate.markAnchors,
+    marksVersion: foliate.marksVersion,
     search,
     runSearch(raw) {
       const query = raw.trim()

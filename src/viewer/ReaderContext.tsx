@@ -104,6 +104,8 @@ export interface ReaderStore {
   toggleFullscreen(): void
   /** Y position of every mark in the visible section, for the margin. */
   markAnchors(): Record<string, number>
+  /** Sube cuando el motor pinta marcas: mantiene las burbujas al día. */
+  marksVersion: number
   search: SearchState
   runSearch(query: string): void
   clearSearch(): void

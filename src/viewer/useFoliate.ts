@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   Annotation,
   LocationInfo,
@@ -82,14 +82,16 @@ export function useFoliate(options: FoliateOptions) {
   const handlers = useRef(options)
   const annotationsRef = useRef(options.annotations)
   const settingsRef = useRef(options.settings)
-  /** cfi → section index currently painted, so stale marks can be erased. */
-  const painted = useRef(new Map<number, Set<string>>())
+  /** CFIs ya entregados al motor, para poder retirarlos cuando se borran. */
+  const painted = useRef(new Set<string>())
   /**
    * Where the engine actually drew each mark, in page coordinates. Sale de los
    * rectángulos que foliate ya calcula al pintar: no hay que resolver CFIs ni
    * adivinar cuándo está listo el DOM.
    */
   const drawn = useRef(new Map<string, { index: number; top: number }>())
+  /** Sube cada vez que el motor pinta una marca: avisa a la capa de burbujas. */
+  const [marksVersion, setMarksVersion] = useState(0)
   const redrawRef = useRef<() => void>(() => undefined)
   const retryTimer = useRef<number | undefined>(undefined)
   const retries = useRef(0)
@@ -110,42 +112,31 @@ export function useFoliate(options: FoliateOptions) {
   }, [])
 
   const redraw = useCallback(
-    (onlyIndex?: number) => {
+    () => {
       const view = viewRef.current
       if (!view?.renderer?.getContents) return
-      let contents: { doc: Document; index: number }[] = []
-      try {
-        contents = view.renderer.getContents()
-      } catch {
-        return
+
+      const highlights = annotationsRef.current.filter((item) => item.kind === 'highlight')
+      const wanted = new Set(highlights.map((item) => item.cfi))
+
+      // fuera las que ya no existen
+      for (const cfi of painted.current) {
+        if (wanted.has(cfi)) continue
+        painted.current.delete(cfi)
+        void view.deleteAnnotation({ value: cfi }).catch(() => undefined)
       }
-      for (const content of contents) {
-        if (typeof content.index !== 'number') continue
-        if (onlyIndex !== undefined && content.index !== onlyIndex) continue
-        // al repintar, las posiciones de esta sección se vuelven a calcular
-        for (const [id, value] of drawn.current) {
-          if (value.index === content.index) drawn.current.delete(id)
-        }
-        const desired = new Map(
-          annotationsRef.current
-            .filter((item) => item.kind === 'highlight' && item.index === content.index)
-            .map((item) => [item.cfi, item] as const),
-        )
-        const previous = painted.current.get(content.index) ?? new Set<string>()
-        for (const cfi of previous) {
-          if (!desired.has(cfi)) {
-            void view.deleteAnnotation({ value: cfi }).catch(() => undefined)
-          }
-        }
-        for (const mark of desired.values()) {
-          void view
-            .addAnnotation({ ...mark, value: mark.cfi })
-            .then(() => {
-              retries.current = 0
-            })
-            .catch(scheduleRetry)
-        }
-        painted.current.set(content.index, new Set(desired.keys()))
+
+      // dentro todas: foliate decide en qué documento va cada CFI. No se filtra
+      // por sección porque el motor reporta el índice de la primera sección de
+      // la página, y las notas de la segunda quedaban fuera sin avisar.
+      for (const mark of highlights) {
+        painted.current.add(mark.cfi)
+        void view
+          .addAnnotation({ ...mark, value: mark.cfi })
+          .then(() => {
+            retries.current = 0
+          })
+          .catch(scheduleRetry)
       }
     },
     [scheduleRetry],
@@ -252,11 +243,14 @@ export function useFoliate(options: FoliateOptions) {
         settle = window.setTimeout(() => readSelection(doc, index), 120)
       })
       doc.addEventListener('keydown', (event) => handlers.current.onKeyDown(event as KeyboardEvent))
-      requestAnimationFrame(() => redraw(index))
+      requestAnimationFrame(() => redraw())
     }
 
     const onRelocate = (event: Event) => {
       handlers.current.onLocation(toLocation((event as CustomEvent).detail as FoliateLocation))
+      // al cambiar de sección las alturas cambian aunque no se pinte ninguna
+      // marca nueva: hay que volver a medirlas
+      setMarksVersion((value) => value + 1)
     }
 
     const onDraw = (event: Event) => {
@@ -269,7 +263,10 @@ export function useFoliate(options: FoliateOptions) {
         (next: (rects: DOMRect[], options: unknown) => SVGGElement) =>
         (rects: DOMRect[], options: unknown) => {
           const first = rects[0]
-          if (first) drawn.current.set(annotation.id, { index: annotation.index, top: first.top })
+          if (first) {
+            drawn.current.set(annotation.id, { index: annotation.index, top: first.top })
+            setMarksVersion((value) => value + 1)
+          }
           return next(rects, options)
         }
       drawAnnotation(
@@ -448,19 +445,23 @@ export function useFoliate(options: FoliateOptions) {
     viewRef.current?.clearSearch()
   }, [])
 
-  /** Y position (viewport px) of every mark the engine has painted. */
+  /** Y position (viewport px) de las marcas que el motor tiene pintadas ahora. */
   const markAnchors = useCallback((): Record<string, number> => {
     const view = viewRef.current
     if (!view?.renderer?.getContents) return {}
     let frameTop = 0
+    let live = new Set<number>()
     try {
       const contents = view.renderer.getContents()
       frameTop = frameRectOf(contents[0]?.doc ?? document)?.top ?? 0
+      live = new Set(contents.map((content) => content.index))
     } catch {
       return {}
     }
     const out: Record<string, number> = {}
-    for (const [id, value] of drawn.current) out[id] = frameTop + value.top
+    for (const [id, value] of drawn.current) {
+      if (live.has(value.index)) out[id] = frameTop + value.top
+    }
     return out
   }, [])
 
@@ -479,6 +480,7 @@ export function useFoliate(options: FoliateOptions) {
     search,
     clearSearch,
     markAnchors,
+    marksVersion,
   }
 }
 

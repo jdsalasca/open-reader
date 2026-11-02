@@ -23,10 +23,7 @@ export default function CommentBubbles() {
   const box = useRef<HTMLDivElement | null>(null)
   const [offset, setOffset] = useState(0)
 
-  const markers = fitMarkers(
-    placeMarkers(annotations, location?.index ?? -1, anchors),
-    offset,
-  )
+  const markers = fitMarkers(placeMarkers(annotations, anchors), offset)
   const byId = new Map(annotations.map((item) => [item.id, item]))
 
   // las alturas son del viewport; la capa vive dentro de la hoja
